@@ -16,9 +16,6 @@
     },
     "./dist/style.css": {
       "import": "./dist/style.css"
-    },
-    "./dist/index.d.ts": {
-      "import": "./dist/index.d.ts"
     }
   },
   "typesVersions": {
