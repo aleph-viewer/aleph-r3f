@@ -92,7 +92,7 @@
     "react-dom": "^18.2.0",
     "tailwind-merge": "^1.14.0",
     "tailwindcss-animate": "^1.0.6",
-    "three": "0.153.0",
+    "three": "0.155.0",
     "zustand": "^4.3.8"
   }
 }

@@ -4257,10 +4257,10 @@
     "potpack" "^1.0.1"
     "zstddec" "^0.0.2"
 
-"three@0.153.0":
-  "integrity" "sha512-OCP2/uQR6GcDpSLnJt/3a4mdS0kNWcbfUXIwLoEMgLzEUIVIYsSDwskpmOii/AkDM+BBwrl6+CKgrjX9+E2aWg=="
-  "resolved" "https://registry.npmjs.org/three/-/three-0.153.0.tgz"
-  "version" "0.153.0"
+"three@0.155.0":
+  "integrity" "sha512-sNgCYmDijnIqkD/bMfk+1pHg3YzsxW7V2ChpuP6HCQ8NiZr3RufsXQr8M3SSUMjW4hG+sUk7YbyuY0DncaDTJQ=="
+  "resolved" "https://registry.npmjs.org/three/-/three-0.155.0.tgz"
+  "version" "0.155.0"
 
 "tiny-inflate@^1.0.3":
   "integrity" "sha512-pkY1fj1cKHb2seWDy0B16HeWyczlJA9/WW3u3c4z/NiWDsO3DOU5D7nhTLE9CF0yXv/QZFY7sEJmj24dK+Rrqw=="
