@@ -142,28 +142,9 @@ const Wrapper = () => {
 
   return (
     <div id="container">
-      <div id="control-panel">
-        <ControlPanel
-        // onBoundsEnabledChange={(enabled: boolean) => {
-        //   setBoundingBoxEnabled(enabled);
-        // }}
-        // onTabChange={(tab: TabName) => {
-        //   switch (tab) {
-        //     case 'scene':
-        //       setAnnotateOnDoubleClickEnabled(false);
-        //       break;
-        //     case 'annotations':
-        //       setAnnotateOnDoubleClickEnabled(true);
-        //       break;
-        //   }
-        // }}
-        // onHome={() => {
-        //   viewerRef.current?.home();
-        // }}
-        ></ControlPanel>
-      </div>
+      <div id="control-panel">{/* <ControlPanel /> */}</div>
       <div id="viewer">
-        <Viewer
+        {/* <Viewer
           ref={viewerRef}
           src={srcs[2]}
           // arrowHelpers={arrowHelpers}
@@ -175,7 +156,7 @@ const Wrapper = () => {
           // environment={environment as Environment}
           // orthographic={orthographic}
           upVector={upVector}
-        />
+        /> */}
       </div>
     </div>
   );
