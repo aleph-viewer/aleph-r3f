@@ -10,7 +10,7 @@ import { execa } from 'execa';
   buildMsg('UMD');
   const umdConfig = defineConfig({
     entry: `src/index.umd.ts`,
-    globalName: 'IIIFThumbnailPanel',
+    globalName: 'Aleph',
     name: 'index',
     outDir: DIST,
   });
@@ -21,7 +21,7 @@ import { execa } from 'execa';
     define: { 'process.env.NODE_ENV': '"production"' },
   });
 
-  buildMsg('@iiif/thumbnail-panel');
+  buildMsg('aleph');
   await build(
     defineConfig({
       entry: `src/index.tsx`,
@@ -42,10 +42,10 @@ import { execa } from 'execa';
         react: 'preact/compat',
       },
     },
-    esbuild:{
-      jsxFactory:'h',
-      jsxFragment:'PFrag',
-      jsxInject:`import { h, Fragment as PFrag } from 'preact'`,
+    esbuild: {
+      jsxFactory: 'h',
+      jsxFragment: 'PFrag',
+      jsxInject: `import { h, Fragment as PFrag } from 'preact'`,
     },
     build: {
       sourcemap: true,
@@ -53,7 +53,7 @@ import { execa } from 'execa';
       lib: {
         entry: 'src/web-components/index.ts',
         formats: ['umd'],
-        name: 'IIIFThumbnailPanelWC',
+        name: 'AlephWC',
         fileName: (format) => {
           return `index.umd.js`;
         },
@@ -72,11 +72,10 @@ import { execa } from 'execa';
     define: { 'process.env.NODE_ENV': '"production"' },
   });
 
+  // buildMsg('Types');
 
-  buildMsg('Types');
-
-  listItem('@iiif/thumbnail-panel');
-  await execa('./node_modules/.bin/dts-bundle-generator', [`--out-file=${DIST}/index.d.ts`, './src/index.tsx']);
+  // listItem('@iiif/thumbnail-panel');
+  // await execa('./node_modules/.bin/dts-bundle-generator', [`--out-file=${DIST}/index.d.ts`, './src/index.tsx']);
 
   function buildMsg(name) {
     console.log(chalk.grey(`\n\nBuilding ${chalk.blue(name)}\n`));
