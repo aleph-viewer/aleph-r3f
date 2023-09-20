@@ -123,11 +123,12 @@ function AnnotationsTab() {
   const [items, setItems] = useState(initialItems);
 
   return (
-    <Reorder.Group axis="y" onReorder={setItems} values={items}>
-      {items.map((item) => (
-        <Item key={item} item={item} />
-      ))}
-    </Reorder.Group>
+    <></>
+    // <Reorder.Group axis="y" onReorder={setItems} values={items}>
+    //   {items.map((item) => (
+    //     <Item key={item} item={item} />
+    //   ))}
+    // </Reorder.Group>
   );
 }
 

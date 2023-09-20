@@ -13,10 +13,6 @@ const Wrapper = () => {
   const YUP: [number, number, number] = [0, 1, 0];
   const ZUP: [number, number, number] = [0, 0, -1];
 
-  // const [annotations, setAnnotations] = useState<Annotation[]>([]);
-  // const [ambientLightIntensity, setAmbientLightIntensity] = useState(0);
-  // const [annotateOnDoubleClickEnabled, setAnnotateOnDoubleClickEnabled] = useState(false);
-  // const [boundingBoxEnabled, setBoundingBoxEnabled] = useState(false);
   const [upVector, setUpVector] = useState<[number, number, number]>(YUP);
 
   const srcs: Src[] = [
@@ -142,9 +138,11 @@ const Wrapper = () => {
 
   return (
     <div id="container">
-      <div id="control-panel">{/* <ControlPanel /> */}</div>
+      <div id="control-panel">
+        <ControlPanel />
+      </div>
       <div id="viewer">
-        {/* <Viewer
+        <Viewer
           ref={viewerRef}
           src={srcs[2]}
           // arrowHelpers={arrowHelpers}
@@ -156,7 +154,7 @@ const Wrapper = () => {
           // environment={environment as Environment}
           // orthographic={orthographic}
           upVector={upVector}
-        /> */}
+        />
       </div>
     </div>
   );
