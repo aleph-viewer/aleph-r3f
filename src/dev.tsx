@@ -1,5 +1,5 @@
 import './globals.css';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { Viewer } from './index';
 import { button, folder, useControls } from 'leva';
@@ -7,13 +7,15 @@ import { Src } from './types/Src';
 import { Environment } from './types/Environment';
 import { ControlPanel } from './components/control-panel';
 import { ViewerRef } from './types';
+import useStore from './Store';
 
 const Wrapper = () => {
   const viewerRef = useRef<ViewerRef>(null);
   const YUP: [number, number, number] = [0, 1, 0];
   const ZUP: [number, number, number] = [0, 0, -1];
-
+  const [src, setSrc] = useState<Src | null>(null);
   const [upVector, setUpVector] = useState<[number, number, number]>(YUP);
+  const { setAmbientLightIntensity } = useStore();
 
   const srcs: Src[] = [
     'https://modelviewer.dev/shared-assets/models/glTF-Sample-Models/2.0/FlightHelmet/glTF/FlightHelmet.gltf',
@@ -48,6 +50,22 @@ const Wrapper = () => {
       },
     ],
   ];
+
+  // load pres 4 json manifest and parse into SRC object
+  useEffect(() => {
+    fetch(
+      'https://gist.githubusercontent.com/edsilv/04001e10299889032762a9439a0ac64c/raw/0fa582cc2a645488cf03ef9af737c6ae8051d42c/presentation4.json'
+    )
+      .then((res) => res.json())
+      .then((json) => {
+        // get ambient light intensity
+        const ambientLightIntensity = json.items[0].ambientLighting.intensity;
+        setAmbientLightIntensity(ambientLightIntensity);
+
+        srcs.push(json.items[0].items[0].items[0].body.id);
+        setSrc(srcs[2]);
+      });
+  }, []);
 
   // const [
   //   { src, annotation, ambientLightIntensity, arrowHelpers, grid, axes, boundingBox, environment, orthographic },
@@ -136,6 +154,10 @@ const Wrapper = () => {
   //   }),
   // }));
 
+  if (!src) {
+    return <>Loading...</>;
+  }
+
   return (
     <div id="container">
       <div id="control-panel">
@@ -144,7 +166,7 @@ const Wrapper = () => {
       <div id="viewer">
         <Viewer
           ref={viewerRef}
-          src={srcs[2]}
+          src={src}
           // arrowHelpers={arrowHelpers}
           onLoad={() => {
             console.log('model(s) loaded');
