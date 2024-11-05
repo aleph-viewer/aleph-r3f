@@ -65,7 +65,7 @@
     "prettier-plugin-tailwindcss": "^0.5.6",
     "react-test-renderer": "^18.2.0",
     "simple-zustand-devtools": "^1.1.0",
-    "tailwindcss": "^3.3.6",
+    "tailwindcss": "^3.4.13",
     "terser": "^5.16.1",
     "tslib": "^2.4.1",
     "typescript": "^5.2.2",
