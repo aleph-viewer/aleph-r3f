@@ -22,6 +22,7 @@ export const GLTF = ({ url, position = [0, 0, 0], rotation = [0, 0, 0], scale = 
   const ref = useRef<Group | null>(null);
   const modelRef = useRef();
 
+  console.log(rotation);
   console.log('drawing gltf');
   console.log(orientation);
 

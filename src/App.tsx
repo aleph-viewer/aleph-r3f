@@ -20,10 +20,10 @@ function App() {
         //   url: 'https://cdn.glitch.global/afd88411-0206-477e-b65f-3d1f201de994/measurement_cube.glb?v=1710500461208',
         //   label: 'Measurement Cube',
         // },
-        'Flight Helmet':
-          'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/FlightHelmet/glTF/FlightHelmet.gltf',
         'Bunny':
           'bunny.glb',
+        'Flight Helmet':
+          'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/FlightHelmet/glTF/FlightHelmet.gltf',
         'Roberto Clemente Batting Helmet':
           'https://cdn.glitch.global/2658666b-2aa1-4395-8dfe-44a4aaaa0b16/nmah-1981_0706_06-clemente_helmet-100k-2048_std_draco.glb?v=1729600102458',
         Shoe: {
