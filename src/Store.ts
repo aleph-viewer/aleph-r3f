@@ -14,6 +14,7 @@ type State = {
   measurementUnits: 'm' | 'mm';
   mode: Mode;
   objectMeasurements: ObjectMeasurement[];
+  orientation: UpVector;
   orthographicEnabled: boolean;
   screenMeasurements: ScreenMeasurement[];
   selectedAnnotation: number | null;
@@ -30,6 +31,7 @@ type State = {
   setMeasurementUnits: (measurementUnits: 'm' | 'mm') => void;
   setMode: (mode: Mode) => void;
   setObjectMeasurements: (measurements: ObjectMeasurement[]) => void;
+  setOrientation: (orientation: UpVector) => void;
   setOrthographicEnabled: (orthographicEnabled: boolean) => void;
   setScreenMeasurements: (measurements: ScreenMeasurement[]) => void;
   setSelectedAnnotation: (selectedAnnotation: number | null) => void;
@@ -43,12 +45,13 @@ const useStore = create<State>((set) => ({
   axesEnabled: false,
   boundsEnabled: false,
   cameraMode: 'perspective',
-  gridEnabled: false,
+  gridEnabled: true,
   loading: true,
   measurementMode: 'object',
   measurementUnits: 'm',
   mode: 'scene',
   objectMeasurements: [],
+  orientation: 'y-positive',
   orthographicEnabled: false,
   screenMeasurements: [],
   selectedAnnotation: null,
@@ -118,6 +121,11 @@ const useStore = create<State>((set) => ({
   setObjectMeasurements: (measurements: ObjectMeasurement[]) =>
     set({
       objectMeasurements: measurements,
+    }),
+
+  setOrientation: (orientation: UpVector) =>
+    set({
+      orientation,
     }),
 
   setOrthographicEnabled: (orthographicEnabled: boolean) =>

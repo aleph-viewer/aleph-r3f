@@ -4,24 +4,24 @@ import useStore from '@/Store';
 import { OptionSelector } from './option-selector';
 import { UpVector } from '@/types';
 
-export function UpVectorSelector() {
-  const { upVector, setUpVector } = useStore();
+export function OrientationSelector() {
+  const { orientation, setOrientation } = useStore();
  
   const handleChange = (value: string) => {
-    setUpVector(value as UpVector);
+    setOrientation(value as UpVector);
   };
 
   return (
     <OptionSelector
-      label="Camera Up"
-      description="Set the rotational up vector."
-      value={upVector}
+      label="Orientation"
+      description="Set the orientation of the model in space."
+      value={orientation}
       onChange={handleChange}
       options={[
         { value: 'y-positive', label: 'Default (Y+ Up)' },
         { value: 'y-negative', label: 'Upside Down (Y- Up)' },
-        { value: 'z-positive', label: 'Flipped 90° (Z+ Up)' },
-        { value: 'z-negative', label: 'Flipped 270° (Z- Up)' },
+        { value: 'z-negative', label: 'Flipped 90° Forward (Z- Up)' },
+        { value: 'z-positive', label: 'Flipped 90° Back (Z+ Up)' },
       ]}
     />
   );

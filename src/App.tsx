@@ -22,6 +22,8 @@ function App() {
         // },
         'Flight Helmet':
           'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/FlightHelmet/glTF/FlightHelmet.gltf',
+        'Bunny':
+          'bunny.glb',
         'Roberto Clemente Batting Helmet':
           'https://cdn.glitch.global/2658666b-2aa1-4395-8dfe-44a4aaaa0b16/nmah-1981_0706_06-clemente_helmet-100k-2048_std_draco.glb?v=1729600102458',
         Shoe: {

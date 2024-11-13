@@ -45,7 +45,7 @@ function Scene({ onLoad, src }: ViewerProps) {
 
   const cameraPosition = new Vector3();
   const cameraTarget = new Vector3();
-  const environment = 'apartment';
+  const environment = 'warehouse';
   const { camera, gl } = useThree();
 
   let boundingSphereRadius: number | null = null;
@@ -57,6 +57,7 @@ function Scene({ onLoad, src }: ViewerProps) {
     gridEnabled,
     loading,
     mode,
+    orientation,
     orthographicEnabled,
     setAnnotations,
     setLoading,
@@ -74,6 +75,12 @@ function Scene({ onLoad, src }: ViewerProps) {
     setSrcs(srcs);
     setAnnotations([]);
   }, [src]);
+
+  // orientation changed
+  useEffect(() => {
+    console.log('orientation changed');
+    recenter();
+  }, [orientation]);
 
   // upVector changed
   useEffect(() => {
@@ -296,7 +303,7 @@ function Scene({ onLoad, src }: ViewerProps) {
       <Bounds lineVisible={boundsEnabled && mode == 'scene'}>
         <Suspense fallback={<Loader />}>
           {srcs.map((src, index) => {
-            return <GLTF key={index} {...src} />;
+            return <GLTF key={index} {...src} orientation={orientation} />;
           })}
         </Suspense>
       </Bounds>
