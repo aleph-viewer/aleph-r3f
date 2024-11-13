@@ -21,7 +21,7 @@ function App() {
         //   label: 'Measurement Cube',
         // },
         'Bunny':
-          'bunny.glb',
+          'https://raw.githubusercontent.com/JulieWinchester/aleph-assets/main/bunny.glb',
         'Flight Helmet':
           'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/FlightHelmet/glTF/FlightHelmet.gltf',
         'Roberto Clemente Batting Helmet':
