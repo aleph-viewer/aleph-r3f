@@ -33,7 +33,7 @@ import { AnnotationTools } from './annotation-tools';
 import MeasurementTools from './measurement-tools';
 import { getBoundingSphereRadius, normalizeSrc } from '@/lib/utils';
 
-function Scene({ onLoad, src }: ViewerProps) {
+function Scene({ envPreset, onLoad, src }: ViewerProps) {
   const boundsRef = useRef<Group | null>(null);
   const boundsLineRef = useRef<Group | null>(null);
 
@@ -45,7 +45,6 @@ function Scene({ onLoad, src }: ViewerProps) {
 
   const cameraPosition = new Vector3();
   const cameraTarget = new Vector3();
-  const environment = 'warehouse';
   const { camera, gl } = useThree();
 
   let boundingSphereRadius: number | null = null;
@@ -320,7 +319,7 @@ function Scene({ onLoad, src }: ViewerProps) {
           })}
         </Suspense>
       </Bounds>
-      <Environment preset={environment} />
+      <Environment preset={envPreset} />
       {Tools[mode]}
       { (gridEnabled && mode == 'scene') && <gridHelper args={getGridProperties()} />}
       { (axesEnabled && mode == 'scene') && <axesHelper args={getAxesProperties()} />}

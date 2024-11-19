@@ -95,6 +95,7 @@ function App() {
       <div id="viewer">
         <Viewer
           ref={viewerRef}
+          envPreset='apartment'
           src={src}
           onLoad={(srcs: SrcObj[]) => {
             console.log(`model${srcs.length > 1 ? 's' : ''} loaded`, srcs);
