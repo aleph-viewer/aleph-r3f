@@ -6,10 +6,13 @@ import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 // @ts-ignore
 import DOMPurify from 'dompurify';
+import useStore from './Store';
 
 function App() {
   const viewerRef = useRef<ViewerRef>(null);
   const loadedUrlsRef = useRef<string[]>([]);
+
+  const { cameraMode } = useStore();
 
   // https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/Models/Models-showcase.md
   // https://github.com/google/model-viewer/tree/master/packages/modelviewer.dev/assets
@@ -76,16 +79,16 @@ function App() {
     // }),
   }));
 
-  // src changed
+  // src or camera mode changed
   useEffect(() => {
     const normalizedSrc = normalizeSrc(src);
     // if the src is already loaded, recenter the camera
     if (normalizedSrc.every((src) => loadedUrlsRef.current.includes(src.url))) {
       setTimeout(() => {
-        viewerRef.current?.recenter();
+        viewerRef.current?.recenterInstant();
       }, 100);
     }
-  }, [src]);
+  }, [src, cameraMode]);
 
   return (
     <div id="container">

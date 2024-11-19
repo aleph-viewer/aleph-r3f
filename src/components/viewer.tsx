@@ -24,6 +24,7 @@ import {
   DRAGGING_MEASUREMENT,
   DROPPED_MEASUREMENT,
   RECENTER,
+  RECENTER_INSTANT,
   CAMERA_CONTROLS_ENABLED,
 } from '@/types';
 import useDoubleClick from '@/lib/hooks/use-double-click';
@@ -53,6 +54,7 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
     ambientLightIntensity,
     axesEnabled,
     boundsEnabled,
+    cameraMode,
     gridEnabled,
     loading,
     mode,
@@ -90,13 +92,11 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
   useTimeout(
     () => {
       if (!loading) {
-        setCameraUp();
         recenter(true);
-        setCameraConfig(); 
       }
     },
     1,
-    [loading, orthographicEnabled]
+    [loading, cameraMode]
   );
 
   const handleRecenterEvent = () => {
@@ -104,6 +104,12 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
   };
 
   useEventListener(RECENTER, handleRecenterEvent);
+
+  const handleRecenterInstantEvent = () => {
+    recenter(true);
+  };
+
+  useEventListener(RECENTER_INSTANT, handleRecenterInstantEvent);
 
   const handleCameraEnabledEvent = (e: any) => {
     (cameraRefs.controls.current as any).enabled = e.detail;
@@ -128,6 +134,8 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
 
   function recenter(instant?: boolean) {
     if (boundsRef.current) {
+      setCameraUp();
+      setCameraConfig();
       zoomToObject(boundsRef.current, instant);
     }
   }
@@ -179,8 +187,10 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
 
     const newCameraUp = new Vector3(upVectorNumeric[0], upVectorNumeric[1], upVectorNumeric[2]);
     const cameraUpChange = !camera.up.equals(newCameraUp);
-    camera.up.copy(newCameraUp);
-    cameraRefs.controls.current?.updateCameraUp();
+    if (cameraUpChange) {
+      camera.up.copy(newCameraUp);
+      cameraRefs.controls.current?.updateCameraUp();
+    }
 
     return cameraUpChange;
   }
@@ -332,10 +342,14 @@ const Viewer = (props: ViewerProps, ref: ((instance: unknown) => void) | RefObje
 
   const triggerDoubleClickEvent = useEventTrigger(DBL_CLICK);
   const triggerRecenterEvent = useEventTrigger(RECENTER);
+  const triggerRecenterInstantEvent = useEventTrigger(RECENTER_INSTANT);
 
   useImperativeHandle(ref, () => ({
     recenter: () => {
       triggerRecenterEvent();
+    },
+    recenterInstant: () => {
+      triggerRecenterInstantEvent();
     },
   }));
 
