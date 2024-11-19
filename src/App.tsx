@@ -71,6 +71,8 @@ function App() {
             scale: [1, 1, 1],
           },
         ] as SrcObj[],
+        'Stanford Bunny': 
+          'https://raw.githubusercontent.com/JulieWinchester/aleph-assets/main/bunny.glb',
         // 'Frog (Draco) URL': 'https://aleph-gltf-models.netlify.app/Frog.glb',
       },
     },
