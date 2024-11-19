@@ -6,6 +6,7 @@ export const DBL_CLICK = 'aldblclick';
 export const DRAGGING_MEASUREMENT = 'aldraggingmeasurement';
 export const DROPPED_MEASUREMENT = 'aldraggedmeasurement';
 export const RECENTER = 'alrecenter';
+export const RECENTER_INSTANT = 'alrecenterinstant';
 
 export type Event =
   | typeof ANNO_CLICK
@@ -15,4 +16,5 @@ export type Event =
   | typeof DBL_CLICK
   | typeof DRAGGING_MEASUREMENT
   | typeof DROPPED_MEASUREMENT
-  | typeof RECENTER;
+  | typeof RECENTER
+  | typeof RECENTER_INSTANT;
