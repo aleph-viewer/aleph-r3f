@@ -310,7 +310,7 @@ function Scene({ onLoad, src }: ViewerProps) {
 
   return (
     <>
-      {orthographicEnabled ? <OrthographicCamera makeDefault position={[0, 0, 2]} /> : <PerspectiveCamera makeDefault position={[0, 0, 2]} />}
+      {orthographicEnabled ? <OrthographicCamera makeDefault position={[0, 0, 2]} /> : <PerspectiveCamera makeDefault fov={30} position={[0, 0, 2]} />}
       <CameraControls ref={cameraRefs.controls} onChange={onCameraChange} />
       <ambientLight intensity={ambientLightIntensity} />
       <Bounds lineVisible={boundsEnabled && mode == 'scene'}>
