@@ -157,9 +157,10 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
             const width = camera.right - camera.left;
             const height = camera.top - camera.bottom;
             const diameter = boundingSphereRadius * 2;
-
             const zoom = Math.min( width / diameter, height / diameter );
-            cameraRefs.controls.current.maxZoom = zoom * 4;
+
+            // Don't set maximum zoom for multiple objects
+            cameraRefs.controls.current.maxZoom = (srcs.length === 1) ? (zoom*4) : Infinity;
             cameraRefs.controls.current.minZoom = zoom/4;
           }
         }
@@ -169,7 +170,8 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
         camera.updateProjectionMatrix();
 
         if (cameraRefs.controls.current) {
-          cameraRefs.controls.current.minDistance = boundingSphereRadius;
+          // Don't set minimum distance for multiple objects
+          cameraRefs.controls.current.minDistance = (srcs.length === 1) ? boundingSphereRadius : Number.EPSILON;
           cameraRefs.controls.current.maxDistance = boundingSphereRadius * 5;
         }
       }
