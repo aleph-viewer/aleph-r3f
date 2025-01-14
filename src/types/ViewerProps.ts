@@ -8,6 +8,5 @@ export type ViewerProps = {
 };
 
 export type ViewerRef = {
-  recenter: () => void;
-  recenterInstant: () => void;
+  recenter: (instant?: boolean) => void;
 };

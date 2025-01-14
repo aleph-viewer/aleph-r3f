@@ -24,7 +24,6 @@ import {
   DRAGGING_MEASUREMENT,
   DROPPED_MEASUREMENT,
   RECENTER,
-  RECENTER_INSTANT,
   CAMERA_CONTROLS_ENABLED,
 } from '@/types';
 import useDoubleClick from '@/lib/hooks/use-double-click';
@@ -49,7 +48,7 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
   const { camera, gl } = useThree();
 
   let boundingSphereRadius: number | null = null;
-
+  
   const {
     ambientLightIntensity,
     axesEnabled,
@@ -79,7 +78,7 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
 
   // orientation changed
   useEffect(() => {
-    recenter();
+    recenter(true);
   }, [orientation]);
 
   // upVector changed
@@ -99,17 +98,11 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
     [loading, cameraMode]
   );
 
-  const handleRecenterEvent = () => {
-    recenter();
+  const handleRecenterEvent = (e: any) => {
+    recenter(e.detail);
   };
 
   useEventListener(RECENTER, handleRecenterEvent);
-
-  const handleRecenterInstantEvent = () => {
-    recenter(true);
-  };
-
-  useEventListener(RECENTER_INSTANT, handleRecenterInstantEvent);
 
   const handleCameraEnabledEvent = (e: any) => {
     (cameraRefs.controls.current as any).enabled = e.detail;
@@ -326,9 +319,9 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
       <ambientLight intensity={ambientLightIntensity} />
       <Bounds lineVisible={boundsEnabled && mode == 'scene'}>
         <Suspense fallback={<Loader />}>
-          {srcs.map((src, index) => {
+            {srcs.map((src, index) => {
             return <GLTF key={index} {...src} orientation={orientation} />;
-          })}
+            })}
         </Suspense>
       </Bounds>
       <Environment preset={envPreset} />
@@ -344,14 +337,10 @@ const Viewer = (props: ViewerProps, ref: ((instance: unknown) => void) | RefObje
 
   const triggerDoubleClickEvent = useEventTrigger(DBL_CLICK);
   const triggerRecenterEvent = useEventTrigger(RECENTER);
-  const triggerRecenterInstantEvent = useEventTrigger(RECENTER_INSTANT);
 
   useImperativeHandle(ref, () => ({
-    recenter: () => {
-      triggerRecenterEvent();
-    },
-    recenterInstant: () => {
-      triggerRecenterInstantEvent();
+    recenter: (instant?: boolean) => {
+      triggerRecenterEvent(instant);
     },
   }));
 
