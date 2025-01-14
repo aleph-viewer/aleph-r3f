@@ -48,7 +48,7 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
   const { camera, gl } = useThree();
 
   let boundingSphereRadius: number | null = null;
-  
+
   const {
     ambientLightIntensity,
     axesEnabled,
@@ -319,9 +319,9 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
       <ambientLight intensity={ambientLightIntensity} />
       <Bounds lineVisible={boundsEnabled && mode == 'scene'}>
         <Suspense fallback={<Loader />}>
-            {srcs.map((src, index) => {
+          {srcs.map((src, index) => {
             return <GLTF key={index} {...src} orientation={orientation} />;
-            })}
+          })}
         </Suspense>
       </Bounds>
       <Environment preset={envPreset} />
