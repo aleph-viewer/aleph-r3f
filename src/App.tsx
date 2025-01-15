@@ -14,9 +14,7 @@ function App() {
 
   const { cameraMode } = useStore();
 
-  // https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/Models/Models-showcase.md
-  // https://github.com/google/model-viewer/tree/master/packages/modelviewer.dev/assets
-  const [{ src }, _setLevaControls] = useControls(() => ({
+  const srcData = {
     src: {
       options: {
         // 'Measurement Cube': {
@@ -75,10 +73,19 @@ function App() {
           'https://raw.githubusercontent.com/JulieWinchester/aleph-assets/main/bunny.glb',
         // 'Frog (Draco) URL': 'https://aleph-gltf-models.netlify.app/Frog.glb',
       },
+      user: {
+        rotation: [0, 0, 0],
+        environmentMap: 'apartment',
+      }
     },
-    // Recenter: button((_get) => {
-    //   viewerRef.current?.recenter();
-    // }),
+  };
+
+  // https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/Models/Models-showcase.md
+  // https://github.com/google/model-viewer/tree/master/packages/modelviewer.dev/assets
+  const [{ src }, _setLevaControls] = useControls(() => ({
+    src: {
+      options: srcData.src.options,
+    },
   }));
 
   // src or camera mode changed
