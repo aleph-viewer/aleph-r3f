@@ -9,10 +9,11 @@ import {
   Html,
   OrthographicCamera,
   PerspectiveCamera,
+  PivotControls,
   useHelper,
   useProgress,
 } from '@react-three/drei';
-import { BoxHelper, Group, Object3D, Vector3 } from 'three';
+import { BoxHelper, Euler, Group, Object3D, Vector3, Matrix4 } from 'three';
 import useStore from '@/Store';
 import {
   ViewerProps as ViewerProps,
@@ -26,7 +27,6 @@ import {
   RECENTER,
   CAMERA_CONTROLS_ENABLED,
 } from '@/types';
-import useDoubleClick from '@/lib/hooks/use-double-click';
 import { useEventListener, useEventTrigger } from '@/lib/hooks/use-event';
 import useTimeout from '@/lib/hooks/use-timeout';
 import { AnnotationTools } from './annotation-tools';
@@ -36,6 +36,7 @@ import { getBoundingSphereRadius, normalizeSrc } from '@/lib/utils';
 function Scene({ envPreset, onLoad, src }: ViewerProps) {
   const boundsRef = useRef<Group | null>(null);
   const boundsLineRef = useRef<Group | null>(null);
+  const pivotControlsRef = useRef<Group | null>(null);
 
   const cameraRefs: CameraRefs = {
     controls: useRef<CameraControls | null>(null),
@@ -59,13 +60,23 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
     mode,
     orientation,
     orthographicEnabled,
+    pivotX,
+    pivotY,
+    pivotZ,
     setAnnotations,
     setLoading,
+    setPivotX,
+    setPivotY,
+    setPivotZ,
     setSelectedAnnotation,
     setSrcs,
     srcs,
     upVector,
   } = useStore();
+
+  const pivotControlsMatrixRef = useRef<Matrix4>(
+    new Matrix4().makeRotationFromEuler(new Euler(pivotX, pivotY, pivotZ))
+  );
 
   const triggerCameraUpdateEvent = useEventTrigger(CAMERA_UPDATE);
 
@@ -86,6 +97,11 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
     const cameraUpChanged = setCameraUp();
     if (cameraUpChanged) recenter();
   }, [upVector]);
+
+  // pivotX, pivotY, pivotZ changed
+  useEffect(() => {
+    pivotControlsMatrixRef.current.makeRotationFromEuler(new Euler(pivotX, pivotY, pivotZ));
+  }, [pivotX, pivotY, pivotZ]);
 
   // when loaded or camera type changed, zoom to object(s) instantaneously
   useTimeout(
@@ -307,15 +323,37 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
   return (
     <>
       {orthographicEnabled ? <OrthographicCamera makeDefault position={[0, 0, 2]} /> : <PerspectiveCamera makeDefault fov={30} position={[0, 0, 2]} />}
-      <CameraControls ref={cameraRefs.controls} onChange={onCameraChange} />
+      <CameraControls ref={cameraRefs.controls} onChange={onCameraChange} makeDefault />
       <ambientLight intensity={ambientLightIntensity} />
-      <Bounds lineVisible={boundsEnabled && mode == 'scene'}>
-        <Suspense fallback={<Loader />}>
-          {srcs.map((src, index) => {
-            return <GLTF key={index} {...src} orientation={orientation} />;
-          })}
-        </Suspense>
-      </Bounds>
+
+      <Suspense fallback={<Loader />}>
+        <PivotControls
+          ref={pivotControlsRef} 
+          disableAxes={true} 
+          disableScaling={true} 
+          disableSliders={true} 
+          annotations={true} 
+          depthTest={false}
+          matrix={pivotControlsMatrixRef.current}
+          autoTransform={false}
+          onDrag={(local) => {
+            pivotControlsMatrixRef.current.copy(local);
+
+            // update pivot x, y, y
+            const euler = new Euler();
+            euler.setFromRotationMatrix(local, 'XYZ');
+            setPivotX(euler.x);
+            setPivotY(euler.y);
+            setPivotZ(euler.z);  
+          }}
+        >
+          <Bounds lineVisible={boundsEnabled && mode == 'scene'}>
+              {srcs.map((src, index) => { return (
+                  <GLTF key={index} {...src} orientation={orientation} />
+              );})}
+          </Bounds>
+        </PivotControls>
+      </Suspense>
       <Environment preset={envPreset} />
       {Tools[mode]}
       { (gridEnabled && mode == 'scene') && <gridHelper args={getGridProperties()} />}

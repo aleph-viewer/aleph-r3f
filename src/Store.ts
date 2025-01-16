@@ -16,6 +16,10 @@ type State = {
   objectMeasurements: ObjectMeasurement[];
   orientation: UpVector;
   orthographicEnabled: boolean;
+  pivotControlsEnabled: boolean;
+  pivotX: number;
+  pivotY: number;
+  pivotZ: number;
   screenMeasurements: ScreenMeasurement[];
   selectedAnnotation: number | null;
   srcs: SrcObj[];
@@ -33,6 +37,10 @@ type State = {
   setObjectMeasurements: (measurements: ObjectMeasurement[]) => void;
   setOrientation: (orientation: UpVector) => void;
   setOrthographicEnabled: (orthographicEnabled: boolean) => void;
+  setPivotControlsEnabled: (pivotControlsEnabled: boolean) => void;
+  setPivotX: (pivotX: number) => void;
+  setPivotY: (pivotY: number) => void;
+  setPivotZ: (pivotZ: number) => void;
   setScreenMeasurements: (measurements: ScreenMeasurement[]) => void;
   setSelectedAnnotation: (selectedAnnotation: number | null) => void;
   setSrcs: (srcs: SrcObj[]) => void;
@@ -53,6 +61,10 @@ const useStore = create<State>((set) => ({
   objectMeasurements: [],
   orientation: 'y-positive',
   orthographicEnabled: false,
+  pivotControlsEnabled: true,
+  pivotX: 0.0,
+  pivotY: 0.0,
+  pivotZ: 0.0,
   screenMeasurements: [],
   selectedAnnotation: null,
   srcs: [],
@@ -131,6 +143,26 @@ const useStore = create<State>((set) => ({
   setOrthographicEnabled: (orthographicEnabled: boolean) =>
     set({
       orthographicEnabled,
+    }),
+
+  setPivotControlsEnabled: (pivotControlsEnabled: boolean) =>
+    set({
+      pivotControlsEnabled,
+    }),
+
+  setPivotX: (pivotX: number) =>
+    set({
+      pivotX,
+    }),
+
+  setPivotY: (pivotY: number) =>
+    set({
+      pivotY,
+    }),
+  
+  setPivotZ: (pivotZ: number) =>
+    set({
+      pivotZ,
     }),
 
   setScreenMeasurements: (measurements: ScreenMeasurement[]) =>
