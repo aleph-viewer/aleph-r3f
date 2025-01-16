@@ -5,7 +5,7 @@ import { Tooltip } from './ui/tooltip';
 import useKeyDown from '@/lib/hooks/use-key-press';
 import { useEventListener, useEventTrigger } from '@/lib/hooks/use-event';
 import useStore from '@/Store';
-import { Vector3 } from 'three';
+import { Matrix4, Vector3 } from 'three';
 import { Tab } from './tab';
 import { cn } from '@/lib/utils';
 import { Instructions } from './instructions';
@@ -24,6 +24,7 @@ function AnnotationTab() {
 
   const cameraPositionRef = useRef<Vector3>();
   const cameraTargetRef = useRef<Vector3>();
+  const pivotMatrixRef = useRef<Matrix4>(new Matrix4());
 
   useKeyDown('Escape', () => {
     setEditIdx(null);
@@ -32,6 +33,7 @@ function AnnotationTab() {
   const handleCameraUpdateEvent = (e: any) => {
     cameraPositionRef.current = e.detail.cameraPosition;
     cameraTargetRef.current = e.detail.cameraTarget;
+    pivotMatrixRef.current = e.detail.pivotMatrix;
   };
 
   useEventListener(CAMERA_UPDATE, handleCameraUpdateEvent);
@@ -78,8 +80,12 @@ function AnnotationTab() {
 
   function updateAnnotationCameraProps(idx: number) {
     const props = {
-      ...(cameraPositionRef.current !== undefined && { cameraPosition: cameraPositionRef.current }),
-      ...(cameraTargetRef.current !== undefined && { cameraTarget: cameraTargetRef.current })
+      ...(cameraPositionRef.current !== undefined && { 
+        cameraPosition: cameraPositionRef.current.clone().applyMatrix4(pivotMatrixRef.current.clone().invert())
+      }),
+      ...(cameraTargetRef.current !== undefined && { 
+        cameraTarget: cameraTargetRef.current.clone().applyMatrix4(pivotMatrixRef.current.clone().invert())
+      })
     }
     updateAnnotation(idx, props);
   }

@@ -60,6 +60,7 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
     mode,
     orientation,
     orthographicEnabled,
+    pivotControlsEnabled,
     pivotX,
     pivotY,
     pivotZ,
@@ -74,8 +75,9 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
     upVector,
   } = useStore();
 
-  const pivotControlsMatrixRef = useRef<Matrix4>(
-    new Matrix4().makeRotationFromEuler(new Euler(pivotX, pivotY, pivotZ))
+  const pivotEulerRef = useRef<Euler>(new Euler(pivotX, pivotY, pivotZ));
+  const pivotMatrixRef = useRef<Matrix4>(
+    new Matrix4().makeRotationFromEuler(pivotEulerRef.current)
   );
 
   const triggerCameraUpdateEvent = useEventTrigger(CAMERA_UPDATE);
@@ -100,8 +102,9 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
 
   // pivotX, pivotY, pivotZ changed
   useEffect(() => {
-    pivotControlsMatrixRef.current.makeRotationFromEuler(new Euler(pivotX, pivotY, pivotZ));
-  }, [pivotX, pivotY, pivotZ]);
+    pivotEulerRef.current.fromArray([pivotX, pivotY, pivotZ]);
+    pivotMatrixRef.current.makeRotationFromEuler(pivotEulerRef.current);
+  }, [pivotEulerRef, pivotX, pivotY, pivotZ]);
 
   // when loaded or camera type changed, zoom to object(s) instantaneously
   useTimeout(
@@ -311,11 +314,11 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
     cameraRefs.controls.current!.getTarget(cameraTarget);
     cameraRefs.target.current = cameraTarget;
 
-    triggerCameraUpdateEvent({ cameraPosition, cameraTarget });
+    triggerCameraUpdateEvent({ cameraPosition, cameraTarget, pivotMatrix: pivotMatrixRef.current });
   }
 
   const Tools: { [key in Mode]: React.ReactElement } = {
-    annotation: <AnnotationTools cameraRefs={cameraRefs} />,
+    annotation: <AnnotationTools cameraRefs={cameraRefs} pivotMatrixRef={pivotMatrixRef} />,
     measurement: <MeasurementTools />,
     scene: <></>,
   };
@@ -328,29 +331,27 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
 
       <Suspense fallback={<Loader />}>
         <PivotControls
-          ref={pivotControlsRef} 
+          ref={pivotControlsRef}
+          enabled={pivotControlsEnabled}
           disableAxes={true} 
           disableScaling={true} 
           disableSliders={true} 
           annotations={true} 
           depthTest={false}
-          matrix={pivotControlsMatrixRef.current}
+          matrix={pivotMatrixRef.current}
           autoTransform={false}
           onDrag={(local) => {
-            pivotControlsMatrixRef.current.copy(local);
-
-            // update pivot x, y, y
-            const euler = new Euler();
-            euler.setFromRotationMatrix(local, 'XYZ');
-            setPivotX(euler.x);
-            setPivotY(euler.y);
-            setPivotZ(euler.z);  
+            pivotMatrixRef.current.copy(local);
+            pivotEulerRef.current.setFromRotationMatrix(local, 'XYZ');
+            setPivotX(pivotEulerRef.current.x);
+            setPivotY(pivotEulerRef.current.y);
+            setPivotZ(pivotEulerRef.current.z);  
           }}
         >
           <Bounds lineVisible={boundsEnabled && mode == 'scene'}>
-              {srcs.map((src, index) => { return (
-                  <GLTF key={index} {...src} orientation={orientation} />
-              );})}
+            {srcs.map((src, index) => { return (
+              <GLTF key={index} {...src} orientation={orientation} />
+            );})}
           </Bounds>
         </PivotControls>
       </Suspense>
