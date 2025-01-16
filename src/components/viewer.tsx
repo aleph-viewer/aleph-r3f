@@ -233,13 +233,6 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
       }
     };
 
-    // zoom to fit bounds on double click on background
-    const handleOnPointerMissed = useDoubleClick(() => {
-      if (mode === 'scene' || mode === 'annotation') {
-        recenter();
-      }
-    });
-
     return (
       <group
         ref={boundsRef}
@@ -250,7 +243,6 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
             // clicking on an overlaid annotation label or description
             return;
           } else {
-            handleOnPointerMissed(e);
             setSelectedAnnotation(null);
           }
         }}>
