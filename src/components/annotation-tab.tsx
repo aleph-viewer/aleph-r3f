@@ -24,7 +24,7 @@ function AnnotationTab() {
 
   const cameraPositionRef = useRef<Vector3>();
   const cameraTargetRef = useRef<Vector3>();
-  const pivotMatrixRef = useRef<Matrix4>(new Matrix4());
+  const rotationMatrixRef = useRef<Matrix4>(new Matrix4());
 
   useKeyDown('Escape', () => {
     setEditIdx(null);
@@ -33,7 +33,7 @@ function AnnotationTab() {
   const handleCameraUpdateEvent = (e: any) => {
     cameraPositionRef.current = e.detail.cameraPosition;
     cameraTargetRef.current = e.detail.cameraTarget;
-    pivotMatrixRef.current = e.detail.pivotMatrix;
+    rotationMatrixRef.current = e.detail.rotationMatrix;
   };
 
   useEventListener(CAMERA_UPDATE, handleCameraUpdateEvent);
@@ -81,10 +81,10 @@ function AnnotationTab() {
   function updateAnnotationCameraProps(idx: number) {
     const props = {
       ...(cameraPositionRef.current !== undefined && { 
-        cameraPosition: cameraPositionRef.current.clone().applyMatrix4(pivotMatrixRef.current.clone().invert())
+        cameraPosition: cameraPositionRef.current.clone().applyMatrix4(rotationMatrixRef.current.clone().invert())
       }),
       ...(cameraTargetRef.current !== undefined && { 
-        cameraTarget: cameraTargetRef.current.clone().applyMatrix4(pivotMatrixRef.current.clone().invert())
+        cameraTarget: cameraTargetRef.current.clone().applyMatrix4(rotationMatrixRef.current.clone().invert())
       })
     }
     updateAnnotation(idx, props);

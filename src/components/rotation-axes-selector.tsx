@@ -4,14 +4,14 @@ import { Selector } from './selector';
 
 import useStore from '@/Store';
 
-export function PivotAxesSelector() {
+export function RotationAxesSelector() {
   const { 
-    pivotX,
-    pivotY,
-    pivotZ,
-    setPivotX,
-    setPivotY,
-    setPivotZ,
+    rotationX,
+    rotationY,
+    rotationZ,
+    setRotationX,
+    setRotationY,
+    setRotationZ,
    } = useStore();
 
   return (
@@ -25,23 +25,23 @@ export function PivotAxesSelector() {
           <input
             type="text"
             className="p-1 text-black w-full"
-            value={pivotX}
+            value={rotationX}
             maxLength={64}
-            onChange={(e) => setPivotX(e.target.value) }
+            onChange={(e) => setRotationX(e.target.value) }
           />
           <input
             type="text"
             className="p-1 text-black w-full"
-            value={pivotY}
+            value={rotationY}
             maxLength={64}
-            onChange={(e) => setPivotY(e.target.value) }
+            onChange={(e) => setRotationY(e.target.value) }
           />
           <input
             type="text"
             className="p-1 text-black w-full"
-            value={pivotZ}
+            value={rotationZ}
             maxLength={64}
-            onChange={(e) => setPivotZ(e.target.value) }
+            onChange={(e) => setRotationZ(e.target.value) }
           />
         </div>
       </Selector>

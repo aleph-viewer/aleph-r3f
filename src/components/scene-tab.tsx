@@ -3,13 +3,13 @@ import { AmbientLightSelector } from './ambient-light-selector';
 import { AxesSelector } from './axes-selector';
 import { BoundsSelector } from './bounds-selector';
 import { GridSelector } from './grid-selector';
-import { PivotAxesSelector } from './pivot-axes-selector';
-import { PivotControlsSelector } from './pivot-controls-selector';
+import { RotationAxesSelector } from './rotation-axes-selector';
+import { RotationControlsSelector } from './rotation-controls-selector';
 import { Tab } from './tab';
 
 function SceneTab() {
   const {
-    pivotControlsEnabled,
+    rotationControlsEnabled,
   } = useStore();
 
   return (
@@ -17,8 +17,8 @@ function SceneTab() {
       <BoundsSelector />
       <GridSelector />
       <AxesSelector />
-      <PivotControlsSelector />
-      { pivotControlsEnabled && <PivotAxesSelector /> }
+      <RotationControlsSelector />
+      { rotationControlsEnabled && <RotationAxesSelector /> }
       <AmbientLightSelector />
     </Tab>
   );

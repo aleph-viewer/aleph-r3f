@@ -15,10 +15,10 @@ type State = {
   mode: Mode;
   objectMeasurements: ObjectMeasurement[];
   orthographicEnabled: boolean;
-  pivotControlsEnabled: boolean;
-  pivotX: number;
-  pivotY: number;
-  pivotZ: number;
+  rotationControlsEnabled: boolean;
+  rotationX: number;
+  rotationY: number;
+  rotationZ: number;
   screenMeasurements: ScreenMeasurement[];
   selectedAnnotation: number | null;
   srcs: SrcObj[];
@@ -34,10 +34,10 @@ type State = {
   setMode: (mode: Mode) => void;
   setObjectMeasurements: (measurements: ObjectMeasurement[]) => void;
   setOrthographicEnabled: (orthographicEnabled: boolean) => void;
-  setPivotControlsEnabled: (pivotControlsEnabled: boolean) => void;
-  setPivotX: (pivotX: number) => void;
-  setPivotY: (pivotY: number) => void;
-  setPivotZ: (pivotZ: number) => void;
+  setRotationControlsEnabled: (rotationControlsEnabled: boolean) => void;
+  setRotationX: (rotationX: number) => void;
+  setRotationY: (rotationY: number) => void;
+  setRotationZ: (rotationZ: number) => void;
   setScreenMeasurements: (measurements: ScreenMeasurement[]) => void;
   setSelectedAnnotation: (selectedAnnotation: number | null) => void;
   setSrcs: (srcs: SrcObj[]) => void;
@@ -56,10 +56,10 @@ const useStore = create<State>((set) => ({
   mode: 'scene',
   objectMeasurements: [],
   orthographicEnabled: false,
-  pivotControlsEnabled: true,
-  pivotX: 0.0,
-  pivotY: 0.0,
-  pivotZ: 0.0,
+  rotationControlsEnabled: true,
+  rotationX: 0.0,
+  rotationY: 0.0,
+  rotationZ: 0.0,
   screenMeasurements: [],
   selectedAnnotation: null,
   srcs: [],
@@ -134,24 +134,24 @@ const useStore = create<State>((set) => ({
       orthographicEnabled,
     }),
 
-  setPivotControlsEnabled: (pivotControlsEnabled: boolean) =>
+  setRotationControlsEnabled: (rotationControlsEnabled: boolean) =>
     set({
-      pivotControlsEnabled,
+      rotationControlsEnabled,
     }),
 
-  setPivotX: (pivotX: number) =>
+  setRotationX: (rotationX: number) =>
     set({
-      pivotX,
+      rotationX,
     }),
 
-  setPivotY: (pivotY: number) =>
+  setRotationY: (rotationY: number) =>
     set({
-      pivotY,
+      rotationY,
     }),
   
-  setPivotZ: (pivotZ: number) =>
+  setRotationZ: (rotationZ: number) =>
     set({
-      pivotZ,
+      rotationZ,
     }),
 
   setScreenMeasurements: (measurements: ScreenMeasurement[]) =>

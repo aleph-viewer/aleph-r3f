@@ -36,7 +36,7 @@ import { getBoundingSphereRadius, normalizeSrc } from '@/lib/utils';
 function Scene({ envPreset, onLoad, src }: ViewerProps) {
   const boundsRef = useRef<Group | null>(null);
   const boundsLineRef = useRef<Group | null>(null);
-  const pivotControlsRef = useRef<Group | null>(null);
+  const rotationControlsRef = useRef<Group | null>(null);
 
   const cameraRefs: CameraRefs = {
     controls: useRef<CameraControls | null>(null),
@@ -59,23 +59,23 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
     loading,
     mode,
     orthographicEnabled,
-    pivotControlsEnabled,
-    pivotX,
-    pivotY,
-    pivotZ,
+    rotationControlsEnabled,
+    rotationX,
+    rotationY,
+    rotationZ,
     setAnnotations,
     setLoading,
-    setPivotX,
-    setPivotY,
-    setPivotZ,
+    setRotationX,
+    setRotationY,
+    setRotationZ,
     setSelectedAnnotation,
     setSrcs,
     srcs,
   } = useStore();
 
-  const pivotEulerRef = useRef<Euler>(new Euler(pivotX, pivotY, pivotZ));
-  const pivotMatrixRef = useRef<Matrix4>(
-    new Matrix4().makeRotationFromEuler(pivotEulerRef.current)
+  const rotationEulerRef = useRef<Euler>(new Euler(rotationX, rotationY, rotationZ));
+  const rotationMatrixRef = useRef<Matrix4>(
+    new Matrix4().makeRotationFromEuler(rotationEulerRef.current)
   );
 
   const triggerCameraUpdateEvent = useEventTrigger(CAMERA_UPDATE);
@@ -87,11 +87,11 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
     setAnnotations([]);
   }, [src]);
 
-  // pivotX, pivotY, pivotZ changed
+  // rotationX, rotationY, rotationZ changed
   useEffect(() => {
-    pivotEulerRef.current.fromArray([pivotX, pivotY, pivotZ]);
-    pivotMatrixRef.current.makeRotationFromEuler(pivotEulerRef.current);
-  }, [pivotEulerRef, pivotX, pivotY, pivotZ]);
+    rotationEulerRef.current.fromArray([rotationX, rotationY, rotationZ]);
+    rotationMatrixRef.current.makeRotationFromEuler(rotationEulerRef.current);
+  }, [rotationEulerRef, rotationX, rotationY, rotationZ]);
 
   // when loaded or camera type changed, zoom to object(s) instantaneously
   useTimeout(
@@ -281,12 +281,12 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
     cameraRefs.controls.current!.getTarget(cameraTarget);
     cameraRefs.target.current = cameraTarget;
 
-    triggerCameraUpdateEvent({ cameraPosition, cameraTarget, pivotMatrix: pivotMatrixRef.current });
+    triggerCameraUpdateEvent({ cameraPosition, cameraTarget, rotationMatrix: rotationMatrixRef.current });
   }
 
   const Tools: { [key in Mode]: React.ReactElement } = {
-    annotation: <AnnotationTools cameraRefs={cameraRefs} pivotMatrixRef={pivotMatrixRef} />,
-    measurement: <MeasurementTools pivotMatrixRef={pivotMatrixRef} />,
+    annotation: <AnnotationTools cameraRefs={cameraRefs} rotationMatrixRef={rotationMatrixRef} />,
+    measurement: <MeasurementTools rotationMatrixRef={rotationMatrixRef} />,
     scene: <></>,
   };
 
@@ -298,21 +298,21 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
 
       <Suspense fallback={<Loader />}>
         <PivotControls
-          ref={pivotControlsRef}
-          enabled={pivotControlsEnabled}
+          ref={rotationControlsRef}
+          enabled={rotationControlsEnabled}
           disableAxes={true} 
           disableScaling={true} 
           disableSliders={true} 
           annotations={true} 
           depthTest={false}
-          matrix={pivotMatrixRef.current}
+          matrix={rotationMatrixRef.current}
           autoTransform={false}
           onDrag={(local) => {
-            pivotMatrixRef.current.copy(local);
-            pivotEulerRef.current.setFromRotationMatrix(local, 'XYZ');
-            setPivotX(pivotEulerRef.current.x);
-            setPivotY(pivotEulerRef.current.y);
-            setPivotZ(pivotEulerRef.current.z);  
+            rotationMatrixRef.current.copy(local);
+            rotationEulerRef.current.setFromRotationMatrix(local, 'XYZ');
+            setRotationX(rotationEulerRef.current.x);
+            setRotationY(rotationEulerRef.current.y);
+            setRotationZ(rotationEulerRef.current.z);  
           }}
         >
           <Bounds lineVisible={boundsEnabled && mode == 'scene'}>

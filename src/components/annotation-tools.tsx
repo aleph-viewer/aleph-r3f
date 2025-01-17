@@ -9,7 +9,7 @@ import { Html } from '@react-three/drei';
 import { cn } from '@/lib/utils';
 import { useDrag } from '@use-gesture/react';
 
-export function AnnotationTools({ cameraRefs, pivotMatrixRef }: { cameraRefs: CameraRefs, pivotMatrixRef: React.MutableRefObject<Matrix4> }) {
+export function AnnotationTools({ cameraRefs, rotationMatrixRef }: { cameraRefs: CameraRefs, rotationMatrixRef: React.MutableRefObject<Matrix4> }) {
   const { 
     annotations, 
     setAnnotations, 
@@ -27,8 +27,8 @@ export function AnnotationTools({ cameraRefs, pivotMatrixRef }: { cameraRefs: Ca
   const v2 = new Vector3();
 
   function zoomToAnnotation(annotation: Annotation) {
-    v1.copy(annotation.cameraPosition!).applyMatrix4(pivotMatrixRef.current);
-    v2.copy(annotation.cameraTarget!).applyMatrix4(pivotMatrixRef.current);
+    v1.copy(annotation.cameraPosition!).applyMatrix4(rotationMatrixRef.current);
+    v2.copy(annotation.cameraTarget!).applyMatrix4(rotationMatrixRef.current);
 
     cameraRefs.controls.current!.setLookAt(
       v1.x,
@@ -52,9 +52,9 @@ export function AnnotationTools({ cameraRefs, pivotMatrixRef }: { cameraRefs: Ca
 
   function isFacingCamera(anno: Annotation): boolean {
     const cameraDirection: Vector3 = camera.position.clone().normalize().sub(
-      anno.position!.clone().normalize().applyMatrix4(pivotMatrixRef.current)
+      anno.position!.clone().normalize().applyMatrix4(rotationMatrixRef.current)
     );
-    const dotProduct: number = cameraDirection.dot(anno.normal!.clone().applyMatrix4(pivotMatrixRef.current));
+    const dotProduct: number = cameraDirection.dot(anno.normal!.clone().applyMatrix4(rotationMatrixRef.current));
 
     if (dotProduct < DOT_PRODUCT_THRESHOLD) {
       return false;
@@ -158,7 +158,7 @@ export function AnnotationTools({ cameraRefs, pivotMatrixRef }: { cameraRefs: Ca
 
   // https://github.com/pmndrs/drei/blob/master/src/web/Html.tsx#L25
   function calculatePosition(anno: Annotation) {
-    const objectPos = v1.copy(anno.position!).applyMatrix4(pivotMatrixRef.current);
+    const objectPos = v1.copy(anno.position!).applyMatrix4(rotationMatrixRef.current);
     objectPos.project(camera);
     const widthHalf = size.width / 2;
     const heightHalf = size.height / 2;
@@ -220,10 +220,10 @@ export function AnnotationTools({ cameraRefs, pivotMatrixRef }: { cameraRefs: Ca
                       if (idx === index) {
                         return {
                           ...anno,
-                          position: intersects[0].point.applyMatrix4(pivotMatrixRef.current.clone().invert()),
+                          position: intersects[0].point.applyMatrix4(rotationMatrixRef.current.clone().invert()),
                           normal: intersects[0].face?.normal,
-                          cameraPosition: cameraRefs.position.current!.applyMatrix4(pivotMatrixRef.current.clone().invert()),
-                          cameraTarget: cameraRefs.target.current!.applyMatrix4(pivotMatrixRef.current.clone().invert()),
+                          cameraPosition: cameraRefs.position.current!.applyMatrix4(rotationMatrixRef.current.clone().invert()),
+                          cameraTarget: cameraRefs.target.current!.applyMatrix4(rotationMatrixRef.current.clone().invert()),
                         };
                       }
                       return anno;
@@ -278,10 +278,10 @@ export function AnnotationTools({ cameraRefs, pivotMatrixRef }: { cameraRefs: Ca
             setAnnotations([
               ...annotations,
               {
-                position: intersects[0].point.applyMatrix4(pivotMatrixRef.current.clone().invert()),
+                position: intersects[0].point.applyMatrix4(rotationMatrixRef.current.clone().invert()),
                 normal: intersects[0].face?.normal,
-                cameraPosition: cameraRefs.position.current!.applyMatrix4(pivotMatrixRef.current.clone().invert()),
-                cameraTarget: cameraRefs.target.current!.applyMatrix4(pivotMatrixRef.current.clone().invert()),
+                cameraPosition: cameraRefs.position.current!.applyMatrix4(rotationMatrixRef.current.clone().invert()),
+                cameraTarget: cameraRefs.target.current!.applyMatrix4(rotationMatrixRef.current.clone().invert()),
               },
             ]);
 
