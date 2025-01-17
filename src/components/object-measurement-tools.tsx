@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import useStore from '@/Store';
-import { Euler, Intersection, Object3D, Object3DEventMap, Quaternion, Vector3 } from 'three';
+import { Intersection, Matrix4, Object3D, Object3DEventMap, Vector3 } from 'three';
 import { useEventTrigger } from '@/lib/hooks/use-event';
 import { ObjectMeasurement, CAMERA_CONTROLS_ENABLED } from '@/types';
 import React from 'react';
@@ -10,7 +10,7 @@ import { cn, getElementTranslate, setElementTranslate } from '@/lib/utils';
 import { useDrag } from '@use-gesture/react';
 import useKeyDown from '@/lib/hooks/use-key-press';
 
-export function ObjectMeasurementTools() {
+export function ObjectMeasurementTools({ pivotMatrixRef }: { pivotMatrixRef: React.MutableRefObject<Matrix4> }) {
   const { 
     objectMeasurements: measurements, 
     setObjectMeasurements: setMeasurements, 
@@ -55,7 +55,7 @@ export function ObjectMeasurementTools() {
 
   // https://github.com/pmndrs/drei/blob/master/src/web/Html.tsx#L25
   function calculateScreenPosition(position: Vector3) {
-    const objectPos = v1.copy(position);
+    const objectPos = v1.copy(position).applyMatrix4(pivotMatrixRef.current);
     objectPos.project(camera);
     const widthHalf = size.width / 2;
     const heightHalf = size.height / 2;
@@ -63,8 +63,10 @@ export function ObjectMeasurementTools() {
   }
 
   function isFacingCamera(measurement: ObjectMeasurement): boolean {
-    const cameraDirection: Vector3 = camera.position.clone().normalize().sub(measurement.position!.clone().normalize());
-    const dotProduct: number = cameraDirection.dot(measurement.normal!);
+    const cameraDirection: Vector3 = camera.position.clone().normalize().sub(
+      measurement.position!.clone().normalize().applyMatrix4(pivotMatrixRef.current)
+    );
+    const dotProduct: number = cameraDirection.dot(measurement.normal!.clone().applyMatrix4(pivotMatrixRef.current));
 
     if (dotProduct < DOT_PRODUCT_THRESHOLD) {
       return false;
@@ -398,7 +400,7 @@ export function ObjectMeasurementTools() {
             setMeasurements([
               ...measurements,
               {
-                position: intersects[0].point,
+                position: intersects[0].point.applyMatrix4(pivotMatrixRef.current.clone().invert()),
                 normal: intersects[0].face?.normal,
               },
             ]);
@@ -450,7 +452,7 @@ export function ObjectMeasurementTools() {
                             if (idx === index) {
                               return {
                                 ...measurement,
-                                position: intersects[0].point,
+                                position: intersects[0].point.applyMatrix4(pivotMatrixRef.current.clone().invert()),
                                 normal: intersects[0].face?.normal,
                               };
                             }

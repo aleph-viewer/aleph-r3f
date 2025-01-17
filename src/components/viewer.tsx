@@ -286,7 +286,7 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
 
   const Tools: { [key in Mode]: React.ReactElement } = {
     annotation: <AnnotationTools cameraRefs={cameraRefs} pivotMatrixRef={pivotMatrixRef} />,
-    measurement: <MeasurementTools />,
+    measurement: <MeasurementTools pivotMatrixRef={pivotMatrixRef} />,
     scene: <></>,
   };
 
