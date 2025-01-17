@@ -6,6 +6,8 @@ import { GLTF } from '@/components/gltf';
 import {
   CameraControls,
   Environment,
+  GizmoHelper,
+  GizmoViewport,
   Html,
   OrthographicCamera,
   PerspectiveCamera,
@@ -176,15 +178,6 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
     }
   }
 
-  function getAxesProperties(): [size?: number | undefined] {
-    if (boundsRef.current) {
-      if (!boundingSphereRadius) boundingSphereRadius = getBoundingSphereRadius(boundsRef.current);
-      return [boundingSphereRadius * 2];
-    } else {
-      return [5];
-    }
-  }
-
   function getGridProperties(): [size?: number | undefined, divisions?: number | undefined] {
     if (boundsRef.current) {
       if (!boundingSphereRadius) boundingSphereRadius = getBoundingSphereRadius(boundsRef.current);
@@ -325,7 +318,11 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
       <Environment preset={envPreset} />
       {Tools[mode]}
       { (gridEnabled && mode == 'scene') && <gridHelper args={getGridProperties()} />}
-      { (axesEnabled && mode == 'scene') && <axesHelper args={getAxesProperties()} />}
+      { (axesEnabled && mode == 'scene') && 
+        <GizmoHelper alignment="bottom-right" margin={[100, 100]}>
+          <GizmoViewport labelColor="white" axisHeadScale={1} />
+        </GizmoHelper>
+      }
     </>
   );
 }
