@@ -15,7 +15,7 @@ import {
   useHelper,
   useProgress,
 } from '@react-three/drei';
-import { BoxHelper, Euler, Group, Object3D, Vector3, Matrix4 } from 'three';
+import { BoxHelper, Group, Object3D, Vector3, Matrix4 } from 'three';
 import useStore from '@/Store';
 import {
   ViewerProps as ViewerProps,
@@ -62,22 +62,22 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
     mode,
     orthographicEnabled,
     rotationControlsEnabled,
-    rotationX,
-    rotationY,
-    rotationZ,
+    rotationEuler,
+    rotationXDegrees,
+    rotationYDegrees,
+    rotationZDegrees,
     setAnnotations,
     setLoading,
-    setRotationX,
-    setRotationY,
-    setRotationZ,
+    setRotationXDegrees,
+    setRotationYDegrees,
+    setRotationZDegrees,
     setSelectedAnnotation,
     setSrcs,
     srcs,
   } = useStore();
 
-  const rotationEulerRef = useRef<Euler>(new Euler(rotationX, rotationY, rotationZ));
   const rotationMatrixRef = useRef<Matrix4>(
-    new Matrix4().makeRotationFromEuler(rotationEulerRef.current)
+    new Matrix4().makeRotationFromEuler(rotationEuler)
   );
 
   const triggerCameraUpdateEvent = useEventTrigger(CAMERA_UPDATE);
@@ -89,11 +89,15 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
     setAnnotations([]);
   }, [src]);
 
-  // rotationX, rotationY, rotationZ changed
+  // rotationXDegrees, rotationYDegrees, rotationZDegrees changed
   useEffect(() => {
-    rotationEulerRef.current.fromArray([rotationX, rotationY, rotationZ]);
-    rotationMatrixRef.current.makeRotationFromEuler(rotationEulerRef.current);
-  }, [rotationEulerRef, rotationX, rotationY, rotationZ]);
+    rotationEuler.fromArray([
+      rotationXDegrees * (Math.PI / 180), 
+      rotationYDegrees * (Math.PI / 180), 
+      rotationZDegrees * (Math.PI / 180)
+    ]);
+    rotationMatrixRef.current.makeRotationFromEuler(rotationEuler);
+  }, [rotationEuler, rotationXDegrees, rotationYDegrees, rotationZDegrees]);
 
   // when loaded or camera type changed, zoom to object(s) instantaneously
   useTimeout(
@@ -302,10 +306,11 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
           autoTransform={false}
           onDrag={(local) => {
             rotationMatrixRef.current.copy(local);
-            rotationEulerRef.current.setFromRotationMatrix(local, 'XYZ');
-            setRotationX(rotationEulerRef.current.x);
-            setRotationY(rotationEulerRef.current.y);
-            setRotationZ(rotationEulerRef.current.z);  
+            rotationEuler.setFromRotationMatrix(local, 'XYZ');
+
+            setRotationXDegrees(rotationEuler.x * (180 / Math.PI));
+            setRotationYDegrees(rotationEuler.y * (180 / Math.PI));
+            setRotationZDegrees(rotationEuler.z * (180 / Math.PI));  
           }}
         >
           <Bounds lineVisible={boundsEnabled && mode == 'scene'}>

@@ -6,12 +6,12 @@ import useStore from '@/Store';
 
 export function RotationAxesSelector() {
   const { 
-    rotationX,
-    rotationY,
-    rotationZ,
-    setRotationX,
-    setRotationY,
-    setRotationZ,
+    rotationXDegrees,
+    rotationYDegrees,
+    rotationZDegrees,
+    setRotationXDegrees,
+    setRotationYDegrees,
+    setRotationZDegrees,
    } = useStore();
 
   return (
@@ -25,23 +25,23 @@ export function RotationAxesSelector() {
           <input
             type="text"
             className="p-1 text-black w-full"
-            value={rotationX}
+            value={rotationXDegrees}
             maxLength={64}
-            onChange={(e) => setRotationX(e.target.value) }
+            onChange={(e) => setRotationXDegrees(e.target.value) }
           />
           <input
             type="text"
             className="p-1 text-black w-full"
-            value={rotationY}
+            value={rotationYDegrees}
             maxLength={64}
-            onChange={(e) => setRotationY(e.target.value) }
+            onChange={(e) => setRotationYDegrees(e.target.value) }
           />
           <input
             type="text"
             className="p-1 text-black w-full"
-            value={rotationZ}
+            value={rotationZDegrees}
             maxLength={64}
-            onChange={(e) => setRotationZ(e.target.value) }
+            onChange={(e) => setRotationZDegrees(e.target.value) }
           />
         </div>
       </Selector>

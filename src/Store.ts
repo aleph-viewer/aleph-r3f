@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { Annotation, CameraMode, SrcObj, Mode, ObjectMeasurement, ScreenMeasurement, MeasurementMode } from './types/';
+import { Euler } from 'three';
+
 // import { mountStoreDevtool } from 'simple-zustand-devtools';
 
 type State = {
@@ -16,9 +18,10 @@ type State = {
   objectMeasurements: ObjectMeasurement[];
   orthographicEnabled: boolean;
   rotationControlsEnabled: boolean;
-  rotationX: number;
-  rotationY: number;
-  rotationZ: number;
+  rotationEuler: Euler;
+  rotationXDegrees: number;
+  rotationYDegrees: number;
+  rotationZDegrees: number;
   screenMeasurements: ScreenMeasurement[];
   selectedAnnotation: number | null;
   srcs: SrcObj[];
@@ -35,9 +38,10 @@ type State = {
   setObjectMeasurements: (measurements: ObjectMeasurement[]) => void;
   setOrthographicEnabled: (orthographicEnabled: boolean) => void;
   setRotationControlsEnabled: (rotationControlsEnabled: boolean) => void;
-  setRotationX: (rotationX: number) => void;
-  setRotationY: (rotationY: number) => void;
-  setRotationZ: (rotationZ: number) => void;
+  setRotationEuler: (rotationEuler: Euler) => void;
+  setRotationXDegrees: (rotationXDegrees: number) => void;
+  setRotationYDegrees: (rotationYDegrees: number) => void;
+  setRotationZDegrees: (rotationZDegrees: number) => void;
   setScreenMeasurements: (measurements: ScreenMeasurement[]) => void;
   setSelectedAnnotation: (selectedAnnotation: number | null) => void;
   setSrcs: (srcs: SrcObj[]) => void;
@@ -57,9 +61,10 @@ const useStore = create<State>((set) => ({
   objectMeasurements: [],
   orthographicEnabled: false,
   rotationControlsEnabled: true,
-  rotationX: 0.0,
-  rotationY: 0.0,
-  rotationZ: 0.0,
+  rotationEuler: new Euler(0, 0, 0),
+  rotationXDegrees: 0.0,
+  rotationYDegrees: 0.0,
+  rotationZDegrees: 0.0,
   screenMeasurements: [],
   selectedAnnotation: null,
   srcs: [],
@@ -84,12 +89,12 @@ const useStore = create<State>((set) => ({
       boundsEnabled,
     }),
 
-    setCameraMode: (cameraMode: CameraMode) => {
-      set({
-        cameraMode,
-        orthographicEnabled: cameraMode === 'orthographic'
-      })
-    },
+  setCameraMode: (cameraMode: CameraMode) => {
+    set({
+      cameraMode,
+      orthographicEnabled: cameraMode === 'orthographic'
+    })
+  },
 
   setGridEnabled: (gridEnabled: boolean) =>
     set({
@@ -139,19 +144,24 @@ const useStore = create<State>((set) => ({
       rotationControlsEnabled,
     }),
 
-  setRotationX: (rotationX: number) =>
+  setRotationEuler: (rotationEuler: Euler) =>
     set({
-      rotationX,
+      rotationEuler,
     }),
 
-  setRotationY: (rotationY: number) =>
+  setRotationXDegrees: (rotationXDegrees: number) =>
     set({
-      rotationY,
+      rotationXDegrees,
+    }),
+
+  setRotationYDegrees: (rotationYDegrees: number) =>
+    set({
+      rotationYDegrees,
     }),
   
-  setRotationZ: (rotationZ: number) =>
+  setRotationZDegrees: (rotationZDegrees: number) =>
     set({
-      rotationZ,
+      rotationZDegrees,
     }),
 
   setScreenMeasurements: (measurements: ScreenMeasurement[]) =>
