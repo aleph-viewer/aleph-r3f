@@ -58,7 +58,6 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
     gridEnabled,
     loading,
     mode,
-    orientation,
     orthographicEnabled,
     pivotControlsEnabled,
     pivotX,
@@ -72,7 +71,6 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
     setSelectedAnnotation,
     setSrcs,
     srcs,
-    upVector,
   } = useStore();
 
   const pivotEulerRef = useRef<Euler>(new Euler(pivotX, pivotY, pivotZ));
@@ -88,17 +86,6 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
     setSrcs(srcs);
     setAnnotations([]);
   }, [src]);
-
-  // orientation changed
-  useEffect(() => {
-    recenter(true);
-  }, [orientation]);
-
-  // upVector changed
-  useEffect(() => {
-    const cameraUpChanged = setCameraUp();
-    if (cameraUpChanged) recenter();
-  }, [upVector]);
 
   // pivotX, pivotY, pivotZ changed
   useEffect(() => {
@@ -146,7 +133,6 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
 
   function recenter(instant?: boolean) {
     if (boundsRef.current) {
-      setCameraUp();
       setCameraConfig();
       zoomToObject(boundsRef.current, instant);
     }
@@ -188,25 +174,6 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
         }
       }
     }
-  }
-
-  function setCameraUp() {
-    const upVectorToNumeric = {
-      'y-positive': [0, 1, 0],
-      'y-negative': [0, -1, 0],
-      'z-positive': [0, 0, 1],
-      'z-negative': [0, 0, -1]
-    };
-    const upVectorNumeric = upVectorToNumeric[upVector];
-
-    const newCameraUp = new Vector3(upVectorNumeric[0], upVectorNumeric[1], upVectorNumeric[2]);
-    const cameraUpChange = !camera.up.equals(newCameraUp);
-    if (cameraUpChange) {
-      camera.up.copy(newCameraUp);
-      cameraRefs.controls.current?.updateCameraUp();
-    }
-
-    return cameraUpChange;
   }
 
   function getAxesProperties(): [size?: number | undefined] {
@@ -350,7 +317,7 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
         >
           <Bounds lineVisible={boundsEnabled && mode == 'scene'}>
             {srcs.map((src, index) => { return (
-              <GLTF key={index} {...src} orientation={orientation} />
+              <GLTF key={index} {...src} />
             );})}
           </Bounds>
         </PivotControls>

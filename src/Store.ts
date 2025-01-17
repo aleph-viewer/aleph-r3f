@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Annotation, CameraMode, SrcObj, Mode, ObjectMeasurement, ScreenMeasurement, MeasurementMode, UpVector } from './types/';
+import { Annotation, CameraMode, SrcObj, Mode, ObjectMeasurement, ScreenMeasurement, MeasurementMode } from './types/';
 // import { mountStoreDevtool } from 'simple-zustand-devtools';
 
 type State = {
@@ -14,7 +14,6 @@ type State = {
   measurementUnits: 'm' | 'mm';
   mode: Mode;
   objectMeasurements: ObjectMeasurement[];
-  orientation: UpVector;
   orthographicEnabled: boolean;
   pivotControlsEnabled: boolean;
   pivotX: number;
@@ -23,7 +22,6 @@ type State = {
   screenMeasurements: ScreenMeasurement[];
   selectedAnnotation: number | null;
   srcs: SrcObj[];
-  upVector: UpVector;
   setAmbientLightIntensity: (ambientLightIntensity: number) => void;
   setAnnotations: (annotations: Annotation[]) => void;
   setAxesEnabled: (axesEnabled: boolean) => void;
@@ -35,7 +33,6 @@ type State = {
   setMeasurementUnits: (measurementUnits: 'm' | 'mm') => void;
   setMode: (mode: Mode) => void;
   setObjectMeasurements: (measurements: ObjectMeasurement[]) => void;
-  setOrientation: (orientation: UpVector) => void;
   setOrthographicEnabled: (orthographicEnabled: boolean) => void;
   setPivotControlsEnabled: (pivotControlsEnabled: boolean) => void;
   setPivotX: (pivotX: number) => void;
@@ -44,7 +41,6 @@ type State = {
   setScreenMeasurements: (measurements: ScreenMeasurement[]) => void;
   setSelectedAnnotation: (selectedAnnotation: number | null) => void;
   setSrcs: (srcs: SrcObj[]) => void;
-  setUpVector: (upVector: UpVector) => void;
 };
 
 const useStore = create<State>((set) => ({
@@ -59,7 +55,6 @@ const useStore = create<State>((set) => ({
   measurementUnits: 'm',
   mode: 'scene',
   objectMeasurements: [],
-  orientation: 'y-positive',
   orthographicEnabled: false,
   pivotControlsEnabled: true,
   pivotX: 0.0,
@@ -68,7 +63,6 @@ const useStore = create<State>((set) => ({
   screenMeasurements: [],
   selectedAnnotation: null,
   srcs: [],
-  upVector: 'y-positive',
 
   setAmbientLightIntensity: (ambientLightIntensity: number) =>
     set({
@@ -135,11 +129,6 @@ const useStore = create<State>((set) => ({
       objectMeasurements: measurements,
     }),
 
-  setOrientation: (orientation: UpVector) =>
-    set({
-      orientation,
-    }),
-
   setOrthographicEnabled: (orthographicEnabled: boolean) =>
     set({
       orthographicEnabled,
@@ -179,11 +168,6 @@ const useStore = create<State>((set) => ({
     set({
       srcs,
       loading: true,
-    }),
-
-  setUpVector: (upVector: UpVector) =>
-    set({
-      upVector,
     }),
 }));
 

@@ -6,7 +6,7 @@ import { useEventTrigger } from '@/lib/hooks/use-event';
 import { ObjectMeasurement, CAMERA_CONTROLS_ENABLED } from '@/types';
 import React from 'react';
 import { Html } from '@react-three/drei';
-import { cn, getElementTranslate, getEulerFromOrientation, setElementTranslate } from '@/lib/utils';
+import { cn, getElementTranslate, setElementTranslate } from '@/lib/utils';
 import { useDrag } from '@use-gesture/react';
 import useKeyDown from '@/lib/hooks/use-key-press';
 
@@ -15,7 +15,6 @@ export function ObjectMeasurementTools() {
     objectMeasurements: measurements, 
     setObjectMeasurements: setMeasurements, 
     measurementUnits,
-    orientation 
   } = useStore();
   const { scene, camera, pointer, raycaster, size } = useThree();
 
@@ -53,28 +52,6 @@ export function ObjectMeasurementTools() {
       }
     }
   }
-
-  function updateMeasurementRotation(measurement: ObjectMeasurement, rotation: Euler): ObjectMeasurement {
-    // get inverted previous rotation
-    const prevRotation = measurement.rotation || new Euler(0, 0, 0);
-    const q = new Quaternion().setFromEuler(prevRotation).invert();
-    const invertPrevRotation = new Euler().setFromQuaternion(q);
-
-    // rotate back to original state and then apply new rotation
-    measurement.position = measurement.position?.applyEuler(invertPrevRotation).applyEuler(rotation);
-    measurement.normal = measurement.normal?.applyEuler(invertPrevRotation).applyEuler(rotation);
-    measurement.rotation = rotation;
-
-    return measurement;
-  }
-
-  // orientation changed
-  useEffect(() => {
-    const orientationEuler = getEulerFromOrientation(orientation);
-    setMeasurements(
-      measurements.map((measurement: ObjectMeasurement) => updateMeasurementRotation(measurement, orientationEuler))
-    )
-  }, [orientation]);
 
   // https://github.com/pmndrs/drei/blob/master/src/web/Html.tsx#L25
   function calculateScreenPosition(position: Vector3) {
@@ -418,14 +395,11 @@ export function ObjectMeasurementTools() {
           const intersects: Intersection<Object3D>[] = getIntersects();
 
           if (intersects.length > 0) {
-            const rotation = getEulerFromOrientation(orientation);
-
             setMeasurements([
               ...measurements,
               {
                 position: intersects[0].point,
-                normal: intersects[0].face?.normal!.applyEuler(rotation),
-                rotation: rotation
+                normal: intersects[0].face?.normal,
               },
             ]);
 
@@ -477,7 +451,7 @@ export function ObjectMeasurementTools() {
                               return {
                                 ...measurement,
                                 position: intersects[0].point,
-                                normal: intersects[0].face?.normal!.applyEuler(measurement.rotation!),
+                                normal: intersects[0].face?.normal,
                               };
                             }
                             return measurement;

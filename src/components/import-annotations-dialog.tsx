@@ -48,11 +48,6 @@ export function AnnotationsDialog() {
     { label: 'camera_target_x', key: 'cameraTarget.x' },
     { label: 'camera_target_y', key: 'cameraTarget.y' },
     { label: 'camera_target_z', key: 'cameraTarget.z' },
-    { label: 'rotation_is_euler', key: 'rotation.isEuler' },
-    { label: 'rotation_x', key: 'rotation._x' },
-    { label: 'rotation_y', key: 'rotation._y' },
-    { label: 'rotation_z', key: 'rotation._z' },
-    { label: 'rotation_order', key: 'rotation._order' },
   ];
 
   return (

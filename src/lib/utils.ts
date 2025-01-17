@@ -1,7 +1,7 @@
-import { Src, SrcObj, UpVector } from '@/types';
+import { Src, SrcObj } from '@/types';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { Box3, Euler, Object3D, Sphere, Vector3 } from 'three';
+import { Box3, Object3D, Sphere, Vector3 } from 'three';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -96,18 +96,4 @@ export function getElementTranslate(el: HTMLElement): number[] | null {
 
 export function setElementTranslate(el: HTMLElement, x: number, y: number) {
   el?.setAttribute('transform', `translate(${x}, ${y})`);
-}
-
-export function getEulerAnglesFromOrientation(orientation: UpVector): [number, number, number] {
-  const orientationToEulerAngles = {
-    'y-positive': [0, 0, 0], // default rotation, points "up"
-    'y-negative': [0, 0, Math.PI], // rotate 180 degrees around Z ccw, points "down"
-    'z-positive': [-Math.PI/2, 0, 0], // rotate 90 degrees around X ccw, points "back"
-    'z-negative': [Math.PI/2, 0, 0] // rotate 270 degrees around X ccw, points "forward"
-  };
-  return orientationToEulerAngles[orientation] as [number, number, number];
-}
-
-export function getEulerFromOrientation(orientation: UpVector): Euler {
-  return new Euler().fromArray(getEulerAnglesFromOrientation(orientation || 'y-positive'));
 }

@@ -9,5 +9,4 @@ export * from './ObjectMeasurement';
 export * from './Point';
 export * from './ScreenMeasurement';
 export * from './Src';
-export * from './UpVector';
 export * from './ViewerProps';
