@@ -23,21 +23,21 @@ export function RotationAxesSelector() {
       >
         <div className="flex flex-row gap-4">
           <input
-            type="text"
+            type="number"
             className="p-1 text-black w-full"
             value={rotationXDegrees}
             maxLength={64}
             onChange={(e) => setRotationXDegrees(e.target.value) }
           />
           <input
-            type="text"
+            type="number"
             className="p-1 text-black w-full"
             value={rotationYDegrees}
             maxLength={64}
             onChange={(e) => setRotationYDegrees(e.target.value) }
           />
           <input
-            type="text"
+            type="number"
             className="p-1 text-black w-full"
             value={rotationZDegrees}
             maxLength={64}

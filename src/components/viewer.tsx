@@ -35,7 +35,7 @@ import { AnnotationTools } from './annotation-tools';
 import MeasurementTools from './measurement-tools';
 import { getBoundingSphereRadius, normalizeSrc } from '@/lib/utils';
 
-function Scene({ envPreset, onLoad, src }: ViewerProps) {
+function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
   const boundsRef = useRef<Group | null>(null);
   const boundsLineRef = useRef<Group | null>(null);
   const rotationControlsRef = useRef<Group | null>(null);
@@ -90,14 +90,19 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
   }, [src]);
 
   // rotationXDegrees, rotationYDegrees, rotationZDegrees changed
-  useEffect(() => {
-    rotationEuler.fromArray([
+  useEffect(() => {  
+    setRotationFromArray([
       rotationXDegrees * (Math.PI / 180), 
       rotationYDegrees * (Math.PI / 180), 
       rotationZDegrees * (Math.PI / 180)
-    ]);
-    rotationMatrixRef.current.makeRotationFromEuler(rotationEuler);
+    ])
   }, [rotationEuler, rotationXDegrees, rotationYDegrees, rotationZDegrees]);
+
+  // When loaded, set initial rotation
+  // todo: this looks good, but wrap up all the rotation setting in functions
+  useEffect(() => {
+    if (!loading && rotationPreset) setRotationFromArray(rotationPreset, true); 
+  }, [loading]);
 
   // when loaded or camera type changed, zoom to object(s) instantaneously
   useTimeout(
@@ -180,6 +185,27 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
         }
       }
     }
+  }
+
+  // Set rotation euler, matrix, and degrees from array of XYZ euler angles in radians
+  function setRotationFromArray(rotation: [number, number, number], setRotationDegrees?: boolean) {
+    rotationEuler.fromArray(rotation);
+    rotationMatrixRef.current.makeRotationFromEuler(rotationEuler);
+
+    if (setRotationDegrees) {
+      setRotationXDegrees(rotationEuler.x * (180 / Math.PI));
+      setRotationYDegrees(rotationEuler.y * (180 / Math.PI));
+      setRotationZDegrees(rotationEuler.z * (180 / Math.PI));  
+    }
+  }
+
+  // Set rotation euler, matrix, and degrees from matrix
+  function setRotationFromMatrix4(matrix: Matrix4) {
+    rotationMatrixRef.current.copy(matrix);
+    rotationEuler.setFromRotationMatrix(matrix, 'XYZ');
+    setRotationXDegrees(rotationEuler.x * (180 / Math.PI));
+    setRotationYDegrees(rotationEuler.y * (180 / Math.PI));
+    setRotationZDegrees(rotationEuler.z * (180 / Math.PI));  
   }
 
   function getGridProperties(): [size?: number | undefined, divisions?: number | undefined] {
@@ -304,14 +330,7 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
           depthTest={false}
           matrix={rotationMatrixRef.current}
           autoTransform={false}
-          onDrag={(local) => {
-            rotationMatrixRef.current.copy(local);
-            rotationEuler.setFromRotationMatrix(local, 'XYZ');
-
-            setRotationXDegrees(rotationEuler.x * (180 / Math.PI));
-            setRotationYDegrees(rotationEuler.y * (180 / Math.PI));
-            setRotationZDegrees(rotationEuler.z * (180 / Math.PI));  
-          }}
+          onDrag={(local) => setRotationFromMatrix4(local)}
         >
           <Bounds lineVisible={boundsEnabled && mode == 'scene'}>
             {srcs.map((src, index) => { return (
