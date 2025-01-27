@@ -326,7 +326,6 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
           disableAxes={true} 
           disableScaling={true} 
           disableSliders={true} 
-          annotations={true} 
           depthTest={false}
           matrix={rotationMatrixRef.current}
           autoTransform={false}
