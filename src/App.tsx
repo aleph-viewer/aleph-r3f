@@ -13,7 +13,7 @@ function App() {
   const viewerRef = useRef<ViewerRef>(null);
   const loadedUrlsRef = useRef<string[]>([]);
 
-  const { cameraMode } = useStore();
+  const { cameraMode, environmentMap, setEnvironmentMap } = useStore();
 
   // Configurable app data, includes list of models and user interface presets
   const config = {
@@ -88,6 +88,10 @@ function App() {
     },
   }));
 
+  useEffect(() => {
+    setEnvironmentMap(config.user.environmentMap as PresetsType);
+  }, [config.user.environmentMap]);
+
   // src or camera mode changed
   useEffect(() => {
     const normalizedSrc = normalizeSrc(src);
@@ -107,7 +111,7 @@ function App() {
       <div id="viewer">
         <Viewer
           ref={viewerRef}
-          envPreset={config.user.environmentMap as PresetsType}
+          envPreset={environmentMap}
           src={src}
           rotationPreset={config.user.rotation as [number, number, number]}
           onLoad={(srcs: SrcObj[]) => {

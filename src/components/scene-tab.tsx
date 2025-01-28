@@ -6,6 +6,7 @@ import { GridSelector } from './grid-selector';
 import { RotationAxesSelector } from './rotation-axes-selector';
 import { RotationControlsSelector } from './rotation-controls-selector';
 import { Tab } from './tab';
+import { EnvironmentMapSelector } from './environment-map-selector';
 
 function SceneTab() {
   const {
@@ -14,12 +15,13 @@ function SceneTab() {
 
   return (
     <Tab>
+      <AxesSelector />
       <BoundsSelector />
       <GridSelector />
-      <AxesSelector />
       <RotationControlsSelector />
       { rotationControlsEnabled && <RotationAxesSelector /> }
       <AmbientLightSelector />
+      <EnvironmentMapSelector />
     </Tab>
   );
 }

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Annotation, CameraMode, SrcObj, Mode, ObjectMeasurement, ScreenMeasurement, MeasurementMode } from './types/';
 import { Euler } from 'three';
+import { PresetsType } from '@react-three/drei/helpers/environment-assets';
 
 // import { mountStoreDevtool } from 'simple-zustand-devtools';
 
@@ -10,6 +11,7 @@ type State = {
   axesEnabled: boolean;
   boundsEnabled: boolean;
   cameraMode: CameraMode;
+  environmentMap: PresetsType
   gridEnabled: boolean;
   loading: boolean;
   measurementMode: MeasurementMode;
@@ -30,6 +32,7 @@ type State = {
   setAxesEnabled: (axesEnabled: boolean) => void;
   setBoundsEnabled: (boundsEnabled: boolean) => void;
   setCameraMode: (cameraMode: CameraMode) => void;
+  setEnvironmentMap: (environmentMap: PresetsType) => void;
   setGridEnabled: (gridEnabled: boolean) => void;
   setLoading: (loading: boolean) => void;
   setMeasurementMode: (measurementMode: MeasurementMode) => void;
@@ -53,6 +56,7 @@ const useStore = create<State>((set) => ({
   axesEnabled: false,
   boundsEnabled: false,
   cameraMode: 'perspective',
+  environmentMap: 'apartment',
   gridEnabled: false,
   loading: true,
   measurementMode: 'object',
@@ -95,6 +99,11 @@ const useStore = create<State>((set) => ({
       orthographicEnabled: cameraMode === 'orthographic'
     })
   },
+
+  setEnvironmentMap: (environmentMap: PresetsType) =>
+    set({
+      environmentMap,
+    }),
 
   setGridEnabled: (gridEnabled: boolean) =>
     set({
