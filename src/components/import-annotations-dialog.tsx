@@ -19,7 +19,20 @@ import { Tooltip } from './ui/tooltip';
 
 export function AnnotationsDialog() {
   const [open, setOpen] = useState(false);
-  const { annotations, setAnnotations } = useStore();
+  const { 
+    annotations, 
+    environmentMap,
+    rotationEuler,
+    rotationXDegrees,
+    rotationYDegrees,
+    rotationZDegrees,
+    setAnnotations,
+    setEnvironmentMap,
+    setRotationEuler,
+    setRotationXDegrees,
+    setRotationYDegrees,
+    setRotationZDegrees,
+  } = useStore();
 
   function stringifyJson(value: any) {
     return JSON.stringify(value, null, 2);
@@ -28,8 +41,16 @@ export function AnnotationsDialog() {
   const [json, setJson] = useState<string>('');
 
   useEffect(() => {
-    setJson(stringifyJson(annotations));
-  }, [annotations]);
+    setJson(stringifyJson(
+      { 
+        annotations: annotations, 
+        user: {
+          environmentMap: environmentMap,
+          rotation: [rotationEuler.x, rotationEuler.y, rotationEuler.z]
+        }, 
+      }
+    ));
+  }, [annotations, environmentMap, rotationEuler, rotationXDegrees, rotationYDegrees, rotationZDegrees]);
 
   const jsonRef = createRef<HTMLTextAreaElement>();
 
@@ -49,6 +70,32 @@ export function AnnotationsDialog() {
     { label: 'camera_target_y', key: 'cameraTarget.y' },
     { label: 'camera_target_z', key: 'cameraTarget.z' },
   ];
+
+  function updateJson() {
+    try {
+      const parsed = JSON.parse(json);
+
+      if (parsed.annotations) {
+        const annos = parseAnnotations(parsed.annotations);
+        setAnnotations(annos);
+      }
+
+      if (parsed?.user?.environmentMap) {
+        setEnvironmentMap(parsed.user.environmentMap);
+      }
+
+      if (parsed?.user?.rotation) {
+        setRotationEuler(rotationEuler.fromArray(parsed.user.rotation));
+        setRotationXDegrees(rotationEuler.x * (180 / Math.PI));
+        setRotationYDegrees(rotationEuler.y * (180 / Math.PI));
+        setRotationZDegrees(rotationEuler.z * (180 / Math.PI));  
+      }
+      
+      setOpen(false);
+    } catch (e) {
+      console.error(e);
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -127,15 +174,7 @@ export function AnnotationsDialog() {
             type="button"
             variant="default"
             className="text-black"
-            onClick={() => {
-              try {
-                const annos = parseAnnotations(json);
-                setAnnotations(annos);
-                setOpen(false);
-              } catch (e) {
-                console.error(e);
-              }
-            }}>
+            onClick={() => updateJson()}>
             Update
           </Button>
           <DialogClose asChild>

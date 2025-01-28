@@ -58,16 +58,14 @@ export const downloadJsonFile = (json: string) => {
 }
 
 export const parseAnnotations = (value: any) => {
-  const parsed = JSON.parse(value);
-
-  parsed.forEach((anno: any) => {
+  value.forEach((anno: any) => {
     anno.cameraPosition = new Vector3().fromArray(Object.values(anno.cameraPosition));
     anno.cameraTarget = new Vector3().fromArray(Object.values(anno.cameraTarget));
     anno.normal = new Vector3().fromArray(Object.values(anno.normal));
     anno.position = new Vector3().fromArray(Object.values(anno.position));
   });
 
-  return parsed;
+  return value;
 };
 
 export function getElementTranslate(el: HTMLElement): number[] | null {

@@ -68,6 +68,7 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
     rotationZDegrees,
     setAnnotations,
     setLoading,
+    setRotationEuler,
     setRotationXDegrees,
     setRotationYDegrees,
     setRotationZDegrees,
@@ -189,7 +190,7 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
 
   // Set rotation euler, matrix, and degrees from array of XYZ euler angles in radians
   function setRotationFromArray(rotation: [number, number, number], setRotationDegrees?: boolean) {
-    rotationEuler.fromArray(rotation);
+    setRotationEuler(rotationEuler.fromArray(rotation));
     rotationMatrixRef.current.makeRotationFromEuler(rotationEuler);
 
     if (setRotationDegrees) {
@@ -202,7 +203,7 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
   // Set rotation euler, matrix, and degrees from matrix
   function setRotationFromMatrix4(matrix: Matrix4) {
     rotationMatrixRef.current.copy(matrix);
-    rotationEuler.setFromRotationMatrix(matrix, 'XYZ');
+    setRotationEuler(rotationEuler.setFromRotationMatrix(matrix, 'XYZ'));
     setRotationXDegrees(rotationEuler.x * (180 / Math.PI));
     setRotationYDegrees(rotationEuler.y * (180 / Math.PI));
     setRotationZDegrees(rotationEuler.z * (180 / Math.PI));  
