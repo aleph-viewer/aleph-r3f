@@ -64,7 +64,7 @@ const useStore = create<State>((set) => ({
   mode: 'scene',
   objectMeasurements: [],
   orthographicEnabled: false,
-  rotationControlsEnabled: true,
+  rotationControlsEnabled: false,
   rotationEuler: new Euler(0, 0, 0),
   rotationXDegrees: 0.0,
   rotationYDegrees: 0.0,

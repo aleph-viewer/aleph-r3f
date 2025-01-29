@@ -323,14 +323,16 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
       <Suspense fallback={<Loader />}>
         <PivotControls
           ref={rotationControlsRef}
-          enabled={rotationControlsEnabled}
+          autoTransform={false}
+          depthTest={false}
           disableAxes={true} 
           disableScaling={true} 
           disableSliders={true} 
-          depthTest={false}
+          enabled={rotationControlsEnabled}
+          fixed={true}
           matrix={rotationMatrixRef.current}
-          autoTransform={false}
           onDrag={(local) => setRotationFromMatrix4(local)}
+          scale={300} 
         >
           <Bounds lineVisible={boundsEnabled && mode == 'scene'}>
             {srcs.map((src, index) => { return (
