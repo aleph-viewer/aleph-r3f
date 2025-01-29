@@ -15,7 +15,7 @@ import {
   useHelper,
   useProgress,
 } from '@react-three/drei';
-import { BoxHelper, Group, Object3D, Vector3, Matrix4 } from 'three';
+import { BoxHelper, Group, Object3D, Vector3, Matrix4, Sphere } from 'three';
 import useStore from '@/Store';
 import {
   ViewerProps as ViewerProps,
@@ -33,11 +33,12 @@ import { useEventListener, useEventTrigger } from '@/lib/hooks/use-event';
 import useTimeout from '@/lib/hooks/use-timeout';
 import { AnnotationTools } from './annotation-tools';
 import MeasurementTools from './measurement-tools';
-import { getBoundingSphereRadius, normalizeSrc } from '@/lib/utils';
+import { getBoundingSphere, normalizeSrc } from '@/lib/utils';
 
 function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
   const boundsRef = useRef<Group | null>(null);
   const boundsLineRef = useRef<Group | null>(null);
+  const boundsSphereRef = useRef<Sphere | null>(null);
   const rotationControlsRef = useRef<Group | null>(null);
 
   const cameraRefs: CameraRefs = {
@@ -49,8 +50,6 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
   const cameraPosition = new Vector3();
   const cameraTarget = new Vector3();
   const { camera, gl } = useThree();
-
-  let boundingSphereRadius: number | null = null;
 
   const {
     ambientLightIntensity,
@@ -130,8 +129,8 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
 
   function zoomToObject(object: Object3D, instant?: boolean, padding: number | undefined = undefined) {
     if (!padding) {
-      const radius = boundingSphereRadius || getBoundingSphereRadius(object);
-      padding = radius * 0.1;
+      if (!boundsSphereRef.current) boundsSphereRef.current = getBoundingSphere(object);
+      padding = boundsSphereRef.current.radius * 0.1;
     }
 
     cameraRefs.controls.current!.fitToBox(object, !instant, {
@@ -152,13 +151,14 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
 
   function setCameraConfig() {
     if (boundsRef.current) {
-      if (!boundingSphereRadius) boundingSphereRadius = getBoundingSphereRadius(boundsRef.current);
+      boundsSphereRef.current = getBoundingSphere(boundsRef.current);
+      const radius = boundsSphereRef.current.radius;
 
       if (orthographicEnabled) {
         const cameraObjectDistance = cameraRefs.controls.current?.distance;
         if (cameraObjectDistance) {
-          camera.near = cameraObjectDistance - (boundingSphereRadius * 100);
-          camera.far = cameraObjectDistance + (boundingSphereRadius * 100);
+          camera.near = cameraObjectDistance - (radius * 100);
+          camera.far = cameraObjectDistance + (radius * 100);
           camera.updateProjectionMatrix();
         }
 
@@ -166,7 +166,7 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
           if ('isOrthographicCamera' in camera && camera.isOrthographicCamera) {
             const width = camera.right - camera.left;
             const height = camera.top - camera.bottom;
-            const diameter = boundingSphereRadius * 2;
+            const diameter = radius * 2;
             const zoom = Math.min( width / diameter, height / diameter );
 
             // Don't set maximum zoom for multiple objects
@@ -175,14 +175,14 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
           }
         }
       } else {
-        camera.near = boundingSphereRadius * 0.01;
-        camera.far = boundingSphereRadius * 200;
+        camera.near = radius * 0.01;
+        camera.far = radius * 200;
         camera.updateProjectionMatrix();
 
         if (cameraRefs.controls.current) {
           // Don't set minimum distance for multiple objects
-          cameraRefs.controls.current.minDistance = (srcs.length === 1) ? boundingSphereRadius : Number.EPSILON;
-          cameraRefs.controls.current.maxDistance = boundingSphereRadius * 5;
+          cameraRefs.controls.current.minDistance = (srcs.length === 1) ? radius : Number.EPSILON;
+          cameraRefs.controls.current.maxDistance = radius * 5;
         }
       }
     }
@@ -211,13 +211,13 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
 
   function getGridProperties(): [size?: number | undefined, divisions?: number | undefined] {
     if (boundsRef.current) {
-      if (!boundingSphereRadius) boundingSphereRadius = getBoundingSphereRadius(boundsRef.current);
+      if (!boundsSphereRef.current) boundsSphereRef.current = getBoundingSphere(boundsRef.current);
 
       const breakPoints = [0.001, 0.01, 0.1, 1.0, 10.0, 100.0];
       let cellWidth = 10.0; // maximum possible value, reduce to scale with object
 
       for (const breakPoint of breakPoints) {
-        if (boundingSphereRadius! < breakPoint) {
+        if (boundsSphereRef.current.radius! < breakPoint) {
           cellWidth = breakPoint/10.0;
           break;
         } 

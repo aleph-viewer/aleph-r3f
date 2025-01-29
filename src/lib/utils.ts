@@ -11,10 +11,11 @@ export function areObjectsIdentical(a: any, b: any) {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-export function getBoundingSphereRadius(object: Object3D) {
-  const box = new Box3().setFromObject(object);
-  const sphere = box.getBoundingSphere(new Sphere());
-  return sphere.radius;
+const box = new Box3();
+const sphere = new Sphere();
+
+export function getBoundingSphere(object: Object3D) {
+  return box.setFromObject(object).getBoundingSphere(sphere);
 }
 
 export function normalizeSrc(src: Src): SrcObj[] {
