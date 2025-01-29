@@ -60,11 +60,11 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
     loading,
     mode,
     orthographicEnabled,
-    rotationControlsEnabled,
     rotationEuler,
     rotationXDegrees,
     rotationYDegrees,
     rotationZDegrees,
+    sceneControlsEnabled,
     setAnnotations,
     setLoading,
     setRotationEuler,
@@ -328,7 +328,7 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
           disableAxes={true} 
           disableScaling={true} 
           disableSliders={true} 
-          enabled={rotationControlsEnabled}
+          enabled={sceneControlsEnabled && mode == 'scene'}
           fixed={true}
           matrix={rotationMatrixRef.current}
           onDrag={(local) => setRotationFromMatrix4(local)}

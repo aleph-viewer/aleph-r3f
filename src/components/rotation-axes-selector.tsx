@@ -1,6 +1,7 @@
 'use client';
 
 import { InputSelector } from './input-selector';
+import { Label } from './ui/label';
 import useStore from '@/Store';
 
 export function RotationAxesSelector() {
@@ -14,7 +15,10 @@ export function RotationAxesSelector() {
    } = useStore();
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 pt-4">
+      <div className="flex items-center justify-between">
+        <Label className={ `text-white whitespace-normal` }>Rotation</Label>
+      </div>
       <InputSelector
         label="X"
         description="Set rotation around the X axis in degrees."

@@ -4,13 +4,13 @@ import { AxesSelector } from './axes-selector';
 import { BoundsSelector } from './bounds-selector';
 import { GridSelector } from './grid-selector';
 import { RotationAxesSelector } from './rotation-axes-selector';
-import { RotationControlsSelector } from './rotation-controls-selector';
 import { Tab } from './tab';
 import { EnvironmentMapSelector } from './environment-map-selector';
+import { SceneControlsSelector } from './scene-controls-selector';
 
 function SceneTab() {
   const {
-    rotationControlsEnabled,
+    sceneControlsEnabled,
   } = useStore();
 
   return (
@@ -18,10 +18,14 @@ function SceneTab() {
       <AxesSelector />
       <BoundsSelector />
       <GridSelector />
-      <RotationControlsSelector />
-      { rotationControlsEnabled && <RotationAxesSelector /> }
-      <AmbientLightSelector />
-      <EnvironmentMapSelector />
+      <SceneControlsSelector />
+      { sceneControlsEnabled && 
+          <div className="flex flex-col gap-y-4 grow">
+            <RotationAxesSelector />
+            <AmbientLightSelector />
+            <EnvironmentMapSelector />
+          </div>
+      }
     </Tab>
   );
 }

@@ -19,11 +19,11 @@ type State = {
   mode: Mode;
   objectMeasurements: ObjectMeasurement[];
   orthographicEnabled: boolean;
-  rotationControlsEnabled: boolean;
   rotationEuler: Euler;
   rotationXDegrees: number;
   rotationYDegrees: number;
   rotationZDegrees: number;
+  sceneControlsEnabled: boolean;
   screenMeasurements: ScreenMeasurement[];
   selectedAnnotation: number | null;
   srcs: SrcObj[];
@@ -40,11 +40,11 @@ type State = {
   setMode: (mode: Mode) => void;
   setObjectMeasurements: (measurements: ObjectMeasurement[]) => void;
   setOrthographicEnabled: (orthographicEnabled: boolean) => void;
-  setRotationControlsEnabled: (rotationControlsEnabled: boolean) => void;
   setRotationEuler: (rotationEuler: Euler) => void;
   setRotationXDegrees: (rotationXDegrees: number) => void;
   setRotationYDegrees: (rotationYDegrees: number) => void;
   setRotationZDegrees: (rotationZDegrees: number) => void;
+  setSceneControlsEnabled: (sceneControlsEnabled: boolean) => void;
   setScreenMeasurements: (measurements: ScreenMeasurement[]) => void;
   setSelectedAnnotation: (selectedAnnotation: number | null) => void;
   setSrcs: (srcs: SrcObj[]) => void;
@@ -64,11 +64,11 @@ const useStore = create<State>((set) => ({
   mode: 'scene',
   objectMeasurements: [],
   orthographicEnabled: false,
-  rotationControlsEnabled: false,
   rotationEuler: new Euler(0, 0, 0),
   rotationXDegrees: 0.0,
   rotationYDegrees: 0.0,
   rotationZDegrees: 0.0,
+  sceneControlsEnabled: false,
   screenMeasurements: [],
   selectedAnnotation: null,
   srcs: [],
@@ -148,11 +148,6 @@ const useStore = create<State>((set) => ({
       orthographicEnabled,
     }),
 
-  setRotationControlsEnabled: (rotationControlsEnabled: boolean) =>
-    set({
-      rotationControlsEnabled,
-    }),
-
   setRotationEuler: (rotationEuler: Euler) =>
     set({
       rotationEuler,
@@ -171,6 +166,11 @@ const useStore = create<State>((set) => ({
   setRotationZDegrees: (rotationZDegrees: number) =>
     set({
       rotationZDegrees,
+    }),
+
+  setSceneControlsEnabled: (sceneControlsEnabled: boolean) => 
+    set({
+      sceneControlsEnabled,
     }),
 
   setScreenMeasurements: (measurements: ScreenMeasurement[]) =>
