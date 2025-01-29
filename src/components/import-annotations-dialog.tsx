@@ -20,12 +20,14 @@ import { Tooltip } from './ui/tooltip';
 export function AnnotationsDialog() {
   const [open, setOpen] = useState(false);
   const { 
+    ambientLightIntensity,
     annotations, 
     environmentMap,
     rotationEuler,
     rotationXDegrees,
     rotationYDegrees,
     rotationZDegrees,
+    setAmbientLightIntensity,
     setAnnotations,
     setEnvironmentMap,
     setRotationEuler,
@@ -44,13 +46,22 @@ export function AnnotationsDialog() {
     setJson(stringifyJson(
       { 
         annotations: annotations, 
-        user: {
+        scene: {
+          ambientLightIntensity: ambientLightIntensity,
           environmentMap: environmentMap,
           rotation: [rotationEuler.x, rotationEuler.y, rotationEuler.z]
         }, 
       }
     ));
-  }, [annotations, environmentMap, rotationEuler, rotationXDegrees, rotationYDegrees, rotationZDegrees]);
+  }, [
+    ambientLightIntensity,
+    annotations, 
+    environmentMap, 
+    rotationEuler, 
+    rotationXDegrees, 
+    rotationYDegrees, 
+    rotationZDegrees
+  ]);
 
   const jsonRef = createRef<HTMLTextAreaElement>();
 
@@ -80,12 +91,16 @@ export function AnnotationsDialog() {
         setAnnotations(annos);
       }
 
-      if (parsed?.user?.environmentMap) {
-        setEnvironmentMap(parsed.user.environmentMap);
+      if (parsed?.scene?.ambientLightIntensity) {
+        setAmbientLightIntensity(parsed.scene.ambientLightIntensity);
       }
 
-      if (parsed?.user?.rotation) {
-        setRotationEuler(rotationEuler.fromArray(parsed.user.rotation));
+      if (parsed?.scene?.environmentMap) {
+        setEnvironmentMap(parsed.scene.environmentMap);
+      }
+
+      if (parsed?.scene?.rotation) {
+        setRotationEuler(rotationEuler.fromArray(parsed.scene.rotation));
         setRotationXDegrees(rotationEuler.x * (180 / Math.PI));
         setRotationYDegrees(rotationEuler.y * (180 / Math.PI));
         setRotationZDegrees(rotationEuler.z * (180 / Math.PI));  

@@ -13,9 +13,14 @@ function App() {
   const viewerRef = useRef<ViewerRef>(null);
   const loadedUrlsRef = useRef<string[]>([]);
 
-  const { cameraMode, environmentMap, setEnvironmentMap } = useStore();
+  const { 
+    cameraMode, 
+    environmentMap, 
+    setAmbientLightIntensity, 
+    setEnvironmentMap
+  } = useStore();
 
-  // Configurable app data, includes list of models and user interface presets
+  // Configurable app data, includes list of models and scene/UI presets
   const config = {
     srcs: {
       // 'Measurement Cube': {
@@ -74,9 +79,10 @@ function App() {
         'https://raw.githubusercontent.com/JulieWinchester/aleph-assets/main/bunny.glb',
         // 'Frog (Draco) URL': 'https://aleph-gltf-models.netlify.app/Frog.glb',
     },
-    user: {
-      rotation: [0, 0, 0], // Default rotation in radians
+    scene: {
+      ambientLightIntensity: 0,
       environmentMap: 'apartment',
+      rotation: [0, 0, 0], // Default rotation in radians
     }
   };
 
@@ -89,8 +95,12 @@ function App() {
   }));
 
   useEffect(() => {
-    setEnvironmentMap(config.user.environmentMap as PresetsType);
-  }, [config.user.environmentMap]);
+    setAmbientLightIntensity(config.scene.ambientLightIntensity);
+  }, [config.scene.ambientLightIntensity]);
+
+  useEffect(() => {
+    setEnvironmentMap(config.scene.environmentMap as PresetsType);
+  }, [config.scene.environmentMap]);
 
   // src or camera mode changed
   useEffect(() => {
@@ -113,7 +123,7 @@ function App() {
           ref={viewerRef}
           envPreset={environmentMap}
           src={src}
-          rotationPreset={config.user.rotation as [number, number, number]}
+          rotationPreset={config.scene.rotation as [number, number, number]}
           onLoad={(srcs: SrcObj[]) => {
             console.log(`model${srcs.length > 1 ? 's' : ''} loaded`, srcs);
             // add loaded urls to array of already loaded urls
