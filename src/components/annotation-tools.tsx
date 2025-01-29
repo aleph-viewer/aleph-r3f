@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import useStore from '@/Store';
 import { Intersection, Matrix4, Object3D, Object3DEventMap, Vector3 } from 'three';
