@@ -6,31 +6,32 @@ export function InputSelector({
   label,
   description,
   disabled,
+  type,
   value,
   onChange,
 }: {
   label: string;
   description: string;
   disabled?: boolean;
-  value: string;
-  onChange: (value: string) => void;
+  type?: string;
+  value: string | number;
+  onChange: (value: string | number) => void;
 }) {
   return (
     <Selector 
       label={label} 
       description={description} 
       inline={true} 
+      labelPadding={true}
       noPaddingTop={true}
     >
       <input
-        type="text"
+        type={type || "text"}
         className="p-1 text-black w-full"
-        defaultValue={value}
+        value={value}
         disabled={disabled}
         maxLength={64}
-        onChange={(e) => {
-          console.log('changed');
-          onChange(value);
+        onChange={(e) => { onChange(e.target.value);
         }}
       />
     </Selector>

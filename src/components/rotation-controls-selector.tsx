@@ -8,8 +8,8 @@ export function RotationControlsSelector() {
 
   return (
     <BooleanSelector
-      label="Rotation Controls"
-      description="Enable/disable rotation controls."
+      label="Show Rotate Controls"
+      description="Show or hide XYZ rotation controls."
       value={rotationControlsEnabled}
       onChange={setRotationControlsEnabled}
     />

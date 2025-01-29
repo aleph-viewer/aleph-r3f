@@ -1,7 +1,6 @@
 'use client';
 
-import { Selector } from './selector';
-
+import { InputSelector } from './input-selector';
 import useStore from '@/Store';
 
 export function RotationAxesSelector() {
@@ -15,35 +14,28 @@ export function RotationAxesSelector() {
    } = useStore();
 
   return (
-      <Selector 
-        label=""
-        description="Set rotation X/Y/Z"
-        inline={true} 
-        noPaddingTop={true}
-      >
-        <div className="flex flex-row gap-4">
-          <input
-            type="number"
-            className="p-1 text-black w-full"
-            value={rotationXDegrees}
-            maxLength={64}
-            onChange={(e) => setRotationXDegrees(e.target.value) }
-          />
-          <input
-            type="number"
-            className="p-1 text-black w-full"
-            value={rotationYDegrees}
-            maxLength={64}
-            onChange={(e) => setRotationYDegrees(e.target.value) }
-          />
-          <input
-            type="number"
-            className="p-1 text-black w-full"
-            value={rotationZDegrees}
-            maxLength={64}
-            onChange={(e) => setRotationZDegrees(e.target.value) }
-          />
-        </div>
-      </Selector>
+    <div className="flex flex-col gap-4">
+      <InputSelector
+        label="X"
+        description="Set rotation around the X axis in degrees."
+        type="number"
+        value={rotationXDegrees}
+        onChange={(value) => setRotationXDegrees(value as number)}
+      />
+      <InputSelector
+        label="Y"
+        description="Set rotation around the Y axis in degrees."
+        type="number"
+        value={rotationYDegrees}
+        onChange={(value) => setRotationYDegrees(value as number)}
+      />
+      <InputSelector
+        label="Z"
+        description="Set rotation around the Z axis in degrees."
+        type="number"
+        value={rotationZDegrees}
+        onChange={(value) => setRotationZDegrees(value as number)}
+      />
+    </div>
   );
 }
