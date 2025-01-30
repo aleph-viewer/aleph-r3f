@@ -1,10 +1,15 @@
 import { Src, SrcObj } from '@/types';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { Box3, Object3D, Sphere, Vector3 } from 'three';
+import { Box3, Matrix4, Object3D, Sphere, Vector3 } from 'three';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+// Apply inverse of a matrix to a vector, e.g. for reversing rotation
+export function applyMatrix4Inverse(v: Vector3, m: Matrix4) {
+  return v.clone().applyMatrix4(m.clone().invert());
 }
 
 export function areObjectsIdentical(a: any, b: any) {

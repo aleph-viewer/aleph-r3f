@@ -6,7 +6,7 @@ import { useEventTrigger } from '@/lib/hooks/use-event';
 import { ObjectMeasurement, CAMERA_CONTROLS_ENABLED } from '@/types';
 import React from 'react';
 import { Html } from '@react-three/drei';
-import { cn, getElementTranslate, setElementTranslate } from '@/lib/utils';
+import { applyMatrix4Inverse, cn, getElementTranslate, setElementTranslate } from '@/lib/utils';
 import { useDrag } from '@use-gesture/react';
 import useKeyDown from '@/lib/hooks/use-key-press';
 
@@ -400,7 +400,7 @@ export function ObjectMeasurementTools({ rotationMatrixRef }: { rotationMatrixRe
             setMeasurements([
               ...measurements,
               {
-                position: intersects[0].point.applyMatrix4(rotationMatrixRef.current.clone().invert()),
+                position: applyMatrix4Inverse(intersects[0].point, rotationMatrixRef.current),
                 normal: intersects[0].face?.normal,
               },
             ]);
@@ -452,7 +452,7 @@ export function ObjectMeasurementTools({ rotationMatrixRef }: { rotationMatrixRe
                             if (idx === index) {
                               return {
                                 ...measurement,
-                                position: intersects[0].point.applyMatrix4(rotationMatrixRef.current.clone().invert()),
+                                position: applyMatrix4Inverse(intersects[0].point, rotationMatrixRef.current),
                                 normal: intersects[0].face?.normal,
                               };
                             }

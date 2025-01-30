@@ -6,7 +6,7 @@ import { useEventListener, useEventTrigger } from '@/lib/hooks/use-event';
 import { ANNO_CLICK, Annotation, CAMERA_CONTROLS_ENABLED, CameraRefs } from '@/types';
 import React from 'react';
 import { Html } from '@react-three/drei';
-import { cn } from '@/lib/utils';
+import { applyMatrix4Inverse, cn } from '@/lib/utils';
 import { useDrag } from '@use-gesture/react';
 
 export function AnnotationTools({ cameraRefs, rotationMatrixRef }: { cameraRefs: CameraRefs, rotationMatrixRef: React.MutableRefObject<Matrix4> }) {
@@ -220,10 +220,10 @@ export function AnnotationTools({ cameraRefs, rotationMatrixRef }: { cameraRefs:
                       if (idx === index) {
                         return {
                           ...anno,
-                          position: intersects[0].point.applyMatrix4(rotationMatrixRef.current.clone().invert()),
+                          position: applyMatrix4Inverse(intersects[0].point, rotationMatrixRef.current),
                           normal: intersects[0].face?.normal,
-                          cameraPosition: cameraRefs.position.current!.applyMatrix4(rotationMatrixRef.current.clone().invert()),
-                          cameraTarget: cameraRefs.target.current!.applyMatrix4(rotationMatrixRef.current.clone().invert()),
+                          cameraPosition: applyMatrix4Inverse(cameraRefs.position.current!, rotationMatrixRef.current),
+                          cameraTarget: applyMatrix4Inverse(cameraRefs.target.current!, rotationMatrixRef.current),
                         };
                       }
                       return anno;
@@ -278,10 +278,10 @@ export function AnnotationTools({ cameraRefs, rotationMatrixRef }: { cameraRefs:
             setAnnotations([
               ...annotations,
               {
-                position: intersects[0].point.applyMatrix4(rotationMatrixRef.current.clone().invert()),
+                position: applyMatrix4Inverse(intersects[0].point, rotationMatrixRef.current),
                 normal: intersects[0].face?.normal,
-                cameraPosition: cameraRefs.position.current!.applyMatrix4(rotationMatrixRef.current.clone().invert()),
-                cameraTarget: cameraRefs.target.current!.applyMatrix4(rotationMatrixRef.current.clone().invert()),
+                cameraPosition: applyMatrix4Inverse(cameraRefs.position.current!, rotationMatrixRef.current),
+                cameraTarget: applyMatrix4Inverse(cameraRefs.target.current!, rotationMatrixRef.current),
               },
             ]);
 

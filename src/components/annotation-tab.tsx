@@ -7,7 +7,7 @@ import { useEventListener, useEventTrigger } from '@/lib/hooks/use-event';
 import useStore from '@/Store';
 import { Matrix4, Vector3 } from 'three';
 import { Tab } from './tab';
-import { cn } from '@/lib/utils';
+import { applyMatrix4Inverse, cn } from '@/lib/utils';
 import { Instructions } from './instructions';
 import { AnnotationsDialog } from './import-annotations-dialog';
 import { Check, Pencil, View, X } from 'lucide-react';
@@ -81,10 +81,10 @@ function AnnotationTab() {
   function updateAnnotationCameraProps(idx: number) {
     const props = {
       ...(cameraPositionRef.current !== undefined && { 
-        cameraPosition: cameraPositionRef.current.clone().applyMatrix4(rotationMatrixRef.current.clone().invert())
+        cameraPosition: applyMatrix4Inverse(cameraPositionRef.current, rotationMatrixRef.current)
       }),
       ...(cameraTargetRef.current !== undefined && { 
-        cameraTarget: cameraTargetRef.current.clone().applyMatrix4(rotationMatrixRef.current.clone().invert())
+        cameraTarget: applyMatrix4Inverse(cameraTargetRef.current, rotationMatrixRef.current)
       })
     }
     updateAnnotation(idx, props);
