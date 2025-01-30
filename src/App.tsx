@@ -6,10 +6,13 @@ import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 // @ts-ignore
 import DOMPurify from 'dompurify';
+import useStore from './Store';
 
 function App() {
   const viewerRef = useRef<ViewerRef>(null);
   const loadedUrlsRef = useRef<string[]>([]);
+
+  const { cameraMode } = useStore();
 
   // https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/Models/Models-showcase.md
   // https://github.com/google/model-viewer/tree/master/packages/modelviewer.dev/assets
@@ -24,8 +27,6 @@ function App() {
           'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/FlightHelmet/glTF/FlightHelmet.gltf',
         'Roberto Clemente Batting Helmet':
           'https://cdn.glitch.global/2658666b-2aa1-4395-8dfe-44a4aaaa0b16/nmah-1981_0706_06-clemente_helmet-100k-2048_std_draco.glb?v=1729600102458',
-        'Stanford Bunny': 
-          'https://raw.githubusercontent.com/JulieWinchester/aleph-assets/main/bunny.glb',
         Shoe: {
           url: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/MaterialsVariantsShoe/glTF-Binary/MaterialsVariantsShoe.glb',
           requiredStatement:
@@ -70,6 +71,8 @@ function App() {
             scale: [1, 1, 1],
           },
         ] as SrcObj[],
+        'Stanford Bunny': 
+          'https://raw.githubusercontent.com/JulieWinchester/aleph-assets/main/bunny.glb',
         // 'Frog (Draco) URL': 'https://aleph-gltf-models.netlify.app/Frog.glb',
       },
     },
@@ -78,16 +81,16 @@ function App() {
     // }),
   }));
 
-  // src changed
+  // src or camera mode changed
   useEffect(() => {
     const normalizedSrc = normalizeSrc(src);
     // if the src is already loaded, recenter the camera
     if (normalizedSrc.every((src) => loadedUrlsRef.current.includes(src.url))) {
       setTimeout(() => {
-        viewerRef.current?.recenter();
+        viewerRef.current?.recenter(true);
       }, 100);
     }
-  }, [src]);
+  }, [src, cameraMode]);
 
   return (
     <div id="container">
@@ -97,6 +100,7 @@ function App() {
       <div id="viewer">
         <Viewer
           ref={viewerRef}
+          envPreset='apartment'
           src={src}
           onLoad={(srcs: SrcObj[]) => {
             console.log(`model${srcs.length > 1 ? 's' : ''} loaded`, srcs);

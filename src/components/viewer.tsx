@@ -33,7 +33,7 @@ import { AnnotationTools } from './annotation-tools';
 import MeasurementTools from './measurement-tools';
 import { getBoundingSphereRadius, normalizeSrc } from '@/lib/utils';
 
-function Scene({ onLoad, src }: ViewerProps) {
+function Scene({ envPreset, onLoad, src }: ViewerProps) {
   const boundsRef = useRef<Group | null>(null);
   const boundsLineRef = useRef<Group | null>(null);
 
@@ -45,7 +45,6 @@ function Scene({ onLoad, src }: ViewerProps) {
 
   const cameraPosition = new Vector3();
   const cameraTarget = new Vector3();
-  const environment = 'warehouse';
   const { camera, gl } = useThree();
 
   let boundingSphereRadius: number | null = null;
@@ -54,6 +53,7 @@ function Scene({ onLoad, src }: ViewerProps) {
     ambientLightIntensity,
     axesEnabled,
     boundsEnabled,
+    cameraMode,
     gridEnabled,
     loading,
     mode,
@@ -78,7 +78,7 @@ function Scene({ onLoad, src }: ViewerProps) {
 
   // orientation changed
   useEffect(() => {
-    recenter();
+    recenter(true);
   }, [orientation]);
 
   // upVector changed
@@ -91,17 +91,15 @@ function Scene({ onLoad, src }: ViewerProps) {
   useTimeout(
     () => {
       if (!loading) {
-        setCameraUp();
         recenter(true);
-        setCameraConfig(); 
       }
     },
     1,
-    [loading, orthographicEnabled]
+    [loading, cameraMode]
   );
 
-  const handleRecenterEvent = () => {
-    recenter();
+  const handleRecenterEvent = (e: any) => {
+    recenter(e.detail);
   };
 
   useEventListener(RECENTER, handleRecenterEvent);
@@ -129,6 +127,8 @@ function Scene({ onLoad, src }: ViewerProps) {
 
   function recenter(instant?: boolean) {
     if (boundsRef.current) {
+      setCameraUp();
+      setCameraConfig();
       zoomToObject(boundsRef.current, instant);
     }
   }
@@ -150,9 +150,10 @@ function Scene({ onLoad, src }: ViewerProps) {
             const width = camera.right - camera.left;
             const height = camera.top - camera.bottom;
             const diameter = boundingSphereRadius * 2;
-
             const zoom = Math.min( width / diameter, height / diameter );
-            cameraRefs.controls.current.maxZoom = zoom * 4;
+
+            // Don't set maximum zoom for multiple objects
+            cameraRefs.controls.current.maxZoom = (srcs.length === 1) ? (zoom*4) : Infinity;
             cameraRefs.controls.current.minZoom = zoom/4;
           }
         }
@@ -162,7 +163,8 @@ function Scene({ onLoad, src }: ViewerProps) {
         camera.updateProjectionMatrix();
 
         if (cameraRefs.controls.current) {
-          cameraRefs.controls.current.minDistance = boundingSphereRadius;
+          // Don't set minimum distance for multiple objects
+          cameraRefs.controls.current.minDistance = (srcs.length === 1) ? boundingSphereRadius : Number.EPSILON;
           cameraRefs.controls.current.maxDistance = boundingSphereRadius * 5;
         }
       }
@@ -180,8 +182,10 @@ function Scene({ onLoad, src }: ViewerProps) {
 
     const newCameraUp = new Vector3(upVectorNumeric[0], upVectorNumeric[1], upVectorNumeric[2]);
     const cameraUpChange = !camera.up.equals(newCameraUp);
-    camera.up.copy(newCameraUp);
-    cameraRefs.controls.current?.updateCameraUp();
+    if (cameraUpChange) {
+      camera.up.copy(newCameraUp);
+      cameraRefs.controls.current?.updateCameraUp();
+    }
 
     return cameraUpChange;
   }
@@ -310,7 +314,7 @@ function Scene({ onLoad, src }: ViewerProps) {
 
   return (
     <>
-      {orthographicEnabled ? <OrthographicCamera makeDefault position={[0, 0, 2]} /> : <PerspectiveCamera makeDefault position={[0, 0, 2]} />}
+      {orthographicEnabled ? <OrthographicCamera makeDefault position={[0, 0, 2]} /> : <PerspectiveCamera makeDefault fov={30} position={[0, 0, 2]} />}
       <CameraControls ref={cameraRefs.controls} onChange={onCameraChange} />
       <ambientLight intensity={ambientLightIntensity} />
       <Bounds lineVisible={boundsEnabled && mode == 'scene'}>
@@ -320,7 +324,7 @@ function Scene({ onLoad, src }: ViewerProps) {
           })}
         </Suspense>
       </Bounds>
-      <Environment preset={environment} />
+      <Environment preset={envPreset} />
       {Tools[mode]}
       { (gridEnabled && mode == 'scene') && <gridHelper args={getGridProperties()} />}
       { (axesEnabled && mode == 'scene') && <axesHelper args={getAxesProperties()} />}
@@ -335,8 +339,8 @@ const Viewer = (props: ViewerProps, ref: ((instance: unknown) => void) | RefObje
   const triggerRecenterEvent = useEventTrigger(RECENTER);
 
   useImperativeHandle(ref, () => ({
-    recenter: () => {
-      triggerRecenterEvent();
+    recenter: (instant?: boolean) => {
+      triggerRecenterEvent(instant);
     },
   }));
 
