@@ -8,8 +8,8 @@ export function AxesSelector() {
 
   return (
     <BooleanSelector
-      label="Axes"
-      description="Enable/disable scene axes."
+      label="Show Axes"
+      description="Show or hide scene XYZ axis display and controls."
       value={axesEnabled}
       onChange={setAxesEnabled}
     />

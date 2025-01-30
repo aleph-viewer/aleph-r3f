@@ -1,20 +1,26 @@
-import { Src, SrcObj, UpVector } from '@/types';
+import { Src, SrcObj } from '@/types';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { Box3, Euler, Object3D, Sphere, Vector3 } from 'three';
+import { Box3, Matrix4, Object3D, Sphere, Vector3 } from 'three';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+// Apply inverse of a matrix to a vector, e.g. for reversing rotation
+export function applyMatrix4Inverse(v: Vector3, m: Matrix4) {
+  return v.clone().applyMatrix4(m.clone().invert());
 }
 
 export function areObjectsIdentical(a: any, b: any) {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-export function getBoundingSphereRadius(object: Object3D) {
-  const box = new Box3().setFromObject(object);
-  const sphere = box.getBoundingSphere(new Sphere());
-  return sphere.radius;
+const box = new Box3();
+const sphere = new Sphere();
+
+export function getBoundingSphere(object: Object3D) {
+  return box.setFromObject(object).getBoundingSphere(sphere);
 }
 
 export function normalizeSrc(src: Src): SrcObj[] {
@@ -58,16 +64,14 @@ export const downloadJsonFile = (json: string) => {
 }
 
 export const parseAnnotations = (value: any) => {
-  const parsed = JSON.parse(value);
-
-  parsed.forEach((anno: any) => {
+  value.forEach((anno: any) => {
     anno.cameraPosition = new Vector3().fromArray(Object.values(anno.cameraPosition));
     anno.cameraTarget = new Vector3().fromArray(Object.values(anno.cameraTarget));
     anno.normal = new Vector3().fromArray(Object.values(anno.normal));
     anno.position = new Vector3().fromArray(Object.values(anno.position));
   });
 
-  return parsed;
+  return value;
 };
 
 export function getElementTranslate(el: HTMLElement): number[] | null {
@@ -96,18 +100,4 @@ export function getElementTranslate(el: HTMLElement): number[] | null {
 
 export function setElementTranslate(el: HTMLElement, x: number, y: number) {
   el?.setAttribute('transform', `translate(${x}, ${y})`);
-}
-
-export function getEulerAnglesFromOrientation(orientation: UpVector): [number, number, number] {
-  const orientationToEulerAngles = {
-    'y-positive': [0, 0, 0], // default rotation, points "up"
-    'y-negative': [0, 0, Math.PI], // rotate 180 degrees around Z ccw, points "down"
-    'z-positive': [-Math.PI/2, 0, 0], // rotate 90 degrees around X ccw, points "back"
-    'z-negative': [Math.PI/2, 0, 0] // rotate 270 degrees around X ccw, points "forward"
-  };
-  return orientationToEulerAngles[orientation] as [number, number, number];
-}
-
-export function getEulerFromOrientation(orientation: UpVector): Euler {
-  return new Euler().fromArray(getEulerAnglesFromOrientation(orientation || 'y-positive'));
 }

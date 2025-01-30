@@ -1,5 +1,8 @@
 import { create } from 'zustand';
-import { Annotation, CameraMode, SrcObj, Mode, ObjectMeasurement, ScreenMeasurement, MeasurementMode, UpVector } from './types/';
+import { Annotation, CameraMode, SrcObj, Mode, ObjectMeasurement, ScreenMeasurement, MeasurementMode } from './types/';
+import { Euler } from 'three';
+import { PresetsType } from '@react-three/drei/helpers/environment-assets';
+
 // import { mountStoreDevtool } from 'simple-zustand-devtools';
 
 type State = {
@@ -8,35 +11,43 @@ type State = {
   axesEnabled: boolean;
   boundsEnabled: boolean;
   cameraMode: CameraMode;
+  environmentMap: PresetsType
   gridEnabled: boolean;
   loading: boolean;
   measurementMode: MeasurementMode;
   measurementUnits: 'm' | 'mm';
   mode: Mode;
   objectMeasurements: ObjectMeasurement[];
-  orientation: UpVector;
   orthographicEnabled: boolean;
+  rotationEuler: Euler;
+  rotationXDegrees: number;
+  rotationYDegrees: number;
+  rotationZDegrees: number;
+  sceneControlsEnabled: boolean;
   screenMeasurements: ScreenMeasurement[];
   selectedAnnotation: number | null;
   srcs: SrcObj[];
-  upVector: UpVector;
   setAmbientLightIntensity: (ambientLightIntensity: number) => void;
   setAnnotations: (annotations: Annotation[]) => void;
   setAxesEnabled: (axesEnabled: boolean) => void;
   setBoundsEnabled: (boundsEnabled: boolean) => void;
   setCameraMode: (cameraMode: CameraMode) => void;
+  setEnvironmentMap: (environmentMap: PresetsType) => void;
   setGridEnabled: (gridEnabled: boolean) => void;
   setLoading: (loading: boolean) => void;
   setMeasurementMode: (measurementMode: MeasurementMode) => void;
   setMeasurementUnits: (measurementUnits: 'm' | 'mm') => void;
   setMode: (mode: Mode) => void;
   setObjectMeasurements: (measurements: ObjectMeasurement[]) => void;
-  setOrientation: (orientation: UpVector) => void;
   setOrthographicEnabled: (orthographicEnabled: boolean) => void;
+  setRotationEuler: (rotationEuler: Euler) => void;
+  setRotationXDegrees: (rotationXDegrees: number) => void;
+  setRotationYDegrees: (rotationYDegrees: number) => void;
+  setRotationZDegrees: (rotationZDegrees: number) => void;
+  setSceneControlsEnabled: (sceneControlsEnabled: boolean) => void;
   setScreenMeasurements: (measurements: ScreenMeasurement[]) => void;
   setSelectedAnnotation: (selectedAnnotation: number | null) => void;
   setSrcs: (srcs: SrcObj[]) => void;
-  setUpVector: (upVector: UpVector) => void;
 };
 
 const useStore = create<State>((set) => ({
@@ -45,18 +56,22 @@ const useStore = create<State>((set) => ({
   axesEnabled: false,
   boundsEnabled: false,
   cameraMode: 'perspective',
+  environmentMap: 'apartment',
   gridEnabled: false,
   loading: true,
   measurementMode: 'object',
   measurementUnits: 'm',
   mode: 'scene',
   objectMeasurements: [],
-  orientation: 'y-positive',
   orthographicEnabled: false,
+  rotationEuler: new Euler(0, 0, 0),
+  rotationXDegrees: 0.0,
+  rotationYDegrees: 0.0,
+  rotationZDegrees: 0.0,
+  sceneControlsEnabled: false,
   screenMeasurements: [],
   selectedAnnotation: null,
   srcs: [],
-  upVector: 'y-positive',
 
   setAmbientLightIntensity: (ambientLightIntensity: number) =>
     set({
@@ -78,12 +93,17 @@ const useStore = create<State>((set) => ({
       boundsEnabled,
     }),
 
-    setCameraMode: (cameraMode: CameraMode) => {
-      set({
-        cameraMode,
-        orthographicEnabled: cameraMode === 'orthographic'
-      })
-    },
+  setCameraMode: (cameraMode: CameraMode) => {
+    set({
+      cameraMode,
+      orthographicEnabled: cameraMode === 'orthographic'
+    })
+  },
+
+  setEnvironmentMap: (environmentMap: PresetsType) =>
+    set({
+      environmentMap,
+    }),
 
   setGridEnabled: (gridEnabled: boolean) =>
     set({
@@ -123,14 +143,34 @@ const useStore = create<State>((set) => ({
       objectMeasurements: measurements,
     }),
 
-  setOrientation: (orientation: UpVector) =>
-    set({
-      orientation,
-    }),
-
   setOrthographicEnabled: (orthographicEnabled: boolean) =>
     set({
       orthographicEnabled,
+    }),
+
+  setRotationEuler: (rotationEuler: Euler) =>
+    set({
+      rotationEuler,
+    }),
+
+  setRotationXDegrees: (rotationXDegrees: number) =>
+    set({
+      rotationXDegrees,
+    }),
+
+  setRotationYDegrees: (rotationYDegrees: number) =>
+    set({
+      rotationYDegrees,
+    }),
+  
+  setRotationZDegrees: (rotationZDegrees: number) =>
+    set({
+      rotationZDegrees,
+    }),
+
+  setSceneControlsEnabled: (sceneControlsEnabled: boolean) => 
+    set({
+      sceneControlsEnabled,
     }),
 
   setScreenMeasurements: (measurements: ScreenMeasurement[]) =>
@@ -147,11 +187,6 @@ const useStore = create<State>((set) => ({
     set({
       srcs,
       loading: true,
-    }),
-
-  setUpVector: (upVector: UpVector) =>
-    set({
-      upVector,
     }),
 }));
 

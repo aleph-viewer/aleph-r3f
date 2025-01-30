@@ -1,19 +1,18 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import useStore from '@/Store';
-import { Euler, Intersection, Object3D, Object3DEventMap, Quaternion, Vector3 } from 'three';
+import { Intersection, Matrix4, Object3D, Object3DEventMap, Vector3 } from 'three';
 import { useEventListener, useEventTrigger } from '@/lib/hooks/use-event';
 import { ANNO_CLICK, Annotation, CAMERA_CONTROLS_ENABLED, CameraRefs } from '@/types';
 import React from 'react';
 import { Html } from '@react-three/drei';
-import { cn, getEulerFromOrientation } from '@/lib/utils';
+import { applyMatrix4Inverse, cn } from '@/lib/utils';
 import { useDrag } from '@use-gesture/react';
 
-export function AnnotationTools({ cameraRefs }: { cameraRefs: CameraRefs }) {
+export function AnnotationTools({ cameraRefs, rotationMatrixRef }: { cameraRefs: CameraRefs, rotationMatrixRef: React.MutableRefObject<Matrix4> }) {
   const { 
     annotations, 
     setAnnotations, 
-    orientation,
     selectedAnnotation, 
     setSelectedAnnotation 
   } = useStore();
@@ -25,20 +24,21 @@ export function AnnotationTools({ cameraRefs }: { cameraRefs: CameraRefs }) {
   const dragRef = useRef<number | null>(null);
 
   const v1 = new Vector3();
+  const v2 = new Vector3();
 
   function zoomToAnnotation(annotation: Annotation) {
-    cameraRefs.controls.current!.setPosition(
-      annotation.cameraPosition!.x,
-      annotation.cameraPosition!.y,
-      annotation.cameraPosition!.z,
+    v1.copy(annotation.cameraPosition!).applyMatrix4(rotationMatrixRef.current);
+    v2.copy(annotation.cameraTarget!).applyMatrix4(rotationMatrixRef.current);
+
+    cameraRefs.controls.current!.setLookAt(
+      v1.x,
+      v1.y,
+      v1.z,
+      v2.x,
+      v2.y,
+      v2.z,
       true
-    );
-    cameraRefs.controls.current!.setTarget(
-      annotation.cameraTarget!.x,
-      annotation.cameraTarget!.y,
-      annotation.cameraTarget!.z,
-      true
-    );
+    )
   }
 
   const handleAnnotationClick = (e: any) => {
@@ -49,32 +49,12 @@ export function AnnotationTools({ cameraRefs }: { cameraRefs: CameraRefs }) {
 
   const triggerAnnoClick = useEventTrigger(ANNO_CLICK);
 
-  function updateAnnotationRotation(anno: Annotation, rotation: Euler): Annotation {
-    // get inverted previous rotation
-    const prevRotation = anno.rotation || new Euler(0, 0, 0);
-    const q = new Quaternion().setFromEuler(prevRotation).invert();
-    const invertPrevRotation = new Euler().setFromQuaternion(q);
-
-    // rotate back to original state and then apply new rotation
-    anno.position = anno.position?.applyEuler(invertPrevRotation).applyEuler(rotation);
-    anno.normal = anno.normal?.applyEuler(invertPrevRotation).applyEuler(rotation);
-    anno.cameraTarget = anno.cameraTarget?.applyEuler(invertPrevRotation).applyEuler(rotation);
-    anno.rotation = rotation;
-
-    return anno;
-  }
-
-  // orientation changed
-  useEffect(() => {
-    const orientationEuler = getEulerFromOrientation(orientation);
-    setAnnotations(
-      annotations.map((anno: Annotation) => updateAnnotationRotation(anno, orientationEuler))
-    )
-  }, [orientation]);
 
   function isFacingCamera(anno: Annotation): boolean {
-    const cameraDirection: Vector3 = camera.position.clone().normalize().sub(anno.position!.clone().normalize());
-    const dotProduct: number = cameraDirection.dot(anno.normal!);
+    const cameraDirection: Vector3 = camera.position.clone().normalize().sub(
+      anno.position!.clone().normalize().applyMatrix4(rotationMatrixRef.current)
+    );
+    const dotProduct: number = cameraDirection.dot(anno.normal!.clone().applyMatrix4(rotationMatrixRef.current));
 
     if (dotProduct < DOT_PRODUCT_THRESHOLD) {
       return false;
@@ -178,7 +158,7 @@ export function AnnotationTools({ cameraRefs }: { cameraRefs: CameraRefs }) {
 
   // https://github.com/pmndrs/drei/blob/master/src/web/Html.tsx#L25
   function calculatePosition(anno: Annotation) {
-    const objectPos = v1.copy(anno.position!);
+    const objectPos = v1.copy(anno.position!).applyMatrix4(rotationMatrixRef.current);
     objectPos.project(camera);
     const widthHalf = size.width / 2;
     const heightHalf = size.height / 2;
@@ -240,10 +220,10 @@ export function AnnotationTools({ cameraRefs }: { cameraRefs: CameraRefs }) {
                       if (idx === index) {
                         return {
                           ...anno,
-                          position: intersects[0].point,
-                          normal: intersects[0].face?.normal!.applyEuler(anno.rotation!),
-                          cameraPosition: cameraRefs.position.current!,
-                          cameraTarget: cameraRefs.target.current!,
+                          position: applyMatrix4Inverse(intersects[0].point, rotationMatrixRef.current),
+                          normal: intersects[0].face?.normal,
+                          cameraPosition: applyMatrix4Inverse(cameraRefs.position.current!, rotationMatrixRef.current),
+                          cameraTarget: applyMatrix4Inverse(cameraRefs.target.current!, rotationMatrixRef.current),
                         };
                       }
                       return anno;
@@ -295,16 +275,13 @@ export function AnnotationTools({ cameraRefs }: { cameraRefs: CameraRefs }) {
           const intersects: Intersection<Object3D>[] = getIntersects();
 
           if (intersects.length > 0) {
-            const rotation = getEulerFromOrientation(orientation);
-
             setAnnotations([
               ...annotations,
               {
-                position: intersects[0].point,
-                normal: intersects[0].face?.normal!.applyEuler(rotation),
-                cameraPosition: cameraRefs.position.current!,
-                cameraTarget: cameraRefs.target.current!,
-                rotation: rotation
+                position: applyMatrix4Inverse(intersects[0].point, rotationMatrixRef.current),
+                normal: intersects[0].face?.normal,
+                cameraPosition: applyMatrix4Inverse(cameraRefs.position.current!, rotationMatrixRef.current),
+                cameraTarget: applyMatrix4Inverse(cameraRefs.target.current!, rotationMatrixRef.current),
               },
             ]);
 

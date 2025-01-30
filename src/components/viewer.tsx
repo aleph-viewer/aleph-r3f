@@ -6,13 +6,16 @@ import { GLTF } from '@/components/gltf';
 import {
   CameraControls,
   Environment,
+  GizmoHelper,
+  GizmoViewport,
   Html,
   OrthographicCamera,
   PerspectiveCamera,
+  PivotControls,
   useHelper,
   useProgress,
 } from '@react-three/drei';
-import { BoxHelper, Group, Object3D, Vector3 } from 'three';
+import { BoxHelper, Group, Object3D, Vector3, Matrix4, Sphere } from 'three';
 import useStore from '@/Store';
 import {
   ViewerProps as ViewerProps,
@@ -26,16 +29,17 @@ import {
   RECENTER,
   CAMERA_CONTROLS_ENABLED,
 } from '@/types';
-import useDoubleClick from '@/lib/hooks/use-double-click';
 import { useEventListener, useEventTrigger } from '@/lib/hooks/use-event';
 import useTimeout from '@/lib/hooks/use-timeout';
 import { AnnotationTools } from './annotation-tools';
 import MeasurementTools from './measurement-tools';
-import { getBoundingSphereRadius, normalizeSrc } from '@/lib/utils';
+import { getBoundingSphere, normalizeSrc } from '@/lib/utils';
 
-function Scene({ envPreset, onLoad, src }: ViewerProps) {
+function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
   const boundsRef = useRef<Group | null>(null);
   const boundsLineRef = useRef<Group | null>(null);
+  const boundsSphereRef = useRef<Sphere | null>(null);
+  const rotationControlsRef = useRef<Group | null>(null);
 
   const cameraRefs: CameraRefs = {
     controls: useRef<CameraControls | null>(null),
@@ -47,8 +51,6 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
   const cameraTarget = new Vector3();
   const { camera, gl } = useThree();
 
-  let boundingSphereRadius: number | null = null;
-
   const {
     ambientLightIntensity,
     axesEnabled,
@@ -57,15 +59,26 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
     gridEnabled,
     loading,
     mode,
-    orientation,
     orthographicEnabled,
+    rotationEuler,
+    rotationXDegrees,
+    rotationYDegrees,
+    rotationZDegrees,
+    sceneControlsEnabled,
     setAnnotations,
     setLoading,
+    setRotationEuler,
+    setRotationXDegrees,
+    setRotationYDegrees,
+    setRotationZDegrees,
     setSelectedAnnotation,
     setSrcs,
     srcs,
-    upVector,
   } = useStore();
+
+  const rotationMatrixRef = useRef<Matrix4>(
+    new Matrix4().makeRotationFromEuler(rotationEuler)
+  );
 
   const triggerCameraUpdateEvent = useEventTrigger(CAMERA_UPDATE);
 
@@ -76,16 +89,20 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
     setAnnotations([]);
   }, [src]);
 
-  // orientation changed
-  useEffect(() => {
-    recenter(true);
-  }, [orientation]);
+  // rotationXDegrees, rotationYDegrees, rotationZDegrees changed
+  useEffect(() => {  
+    setRotationFromArray([
+      rotationXDegrees * (Math.PI / 180), 
+      rotationYDegrees * (Math.PI / 180), 
+      rotationZDegrees * (Math.PI / 180)
+    ])
+  }, [rotationEuler, rotationXDegrees, rotationYDegrees, rotationZDegrees]);
 
-  // upVector changed
+  // When loaded, set initial rotation
+  // todo: this looks good, but wrap up all the rotation setting in functions
   useEffect(() => {
-    const cameraUpChanged = setCameraUp();
-    if (cameraUpChanged) recenter();
-  }, [upVector]);
+    if (!loading && rotationPreset) setRotationFromArray(rotationPreset, true); 
+  }, [loading]);
 
   // when loaded or camera type changed, zoom to object(s) instantaneously
   useTimeout(
@@ -112,8 +129,8 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
 
   function zoomToObject(object: Object3D, instant?: boolean, padding: number | undefined = undefined) {
     if (!padding) {
-      const radius = boundingSphereRadius || getBoundingSphereRadius(object);
-      padding = radius * 0.1;
+      if (!boundsSphereRef.current) boundsSphereRef.current = getBoundingSphere(object);
+      padding = boundsSphereRef.current.radius * 0.1;
     }
 
     cameraRefs.controls.current!.fitToBox(object, !instant, {
@@ -127,7 +144,6 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
 
   function recenter(instant?: boolean) {
     if (boundsRef.current) {
-      setCameraUp();
       setCameraConfig();
       zoomToObject(boundsRef.current, instant);
     }
@@ -135,13 +151,14 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
 
   function setCameraConfig() {
     if (boundsRef.current) {
-      if (!boundingSphereRadius) boundingSphereRadius = getBoundingSphereRadius(boundsRef.current);
+      boundsSphereRef.current = getBoundingSphere(boundsRef.current);
+      const radius = boundsSphereRef.current.radius;
 
       if (orthographicEnabled) {
         const cameraObjectDistance = cameraRefs.controls.current?.distance;
         if (cameraObjectDistance) {
-          camera.near = cameraObjectDistance - (boundingSphereRadius * 100);
-          camera.far = cameraObjectDistance + (boundingSphereRadius * 100);
+          camera.near = cameraObjectDistance - (radius * 100);
+          camera.far = cameraObjectDistance + (radius * 100);
           camera.updateProjectionMatrix();
         }
 
@@ -149,7 +166,7 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
           if ('isOrthographicCamera' in camera && camera.isOrthographicCamera) {
             const width = camera.right - camera.left;
             const height = camera.top - camera.bottom;
-            const diameter = boundingSphereRadius * 2;
+            const diameter = radius * 2;
             const zoom = Math.min( width / diameter, height / diameter );
 
             // Don't set maximum zoom for multiple objects
@@ -158,56 +175,49 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
           }
         }
       } else {
-        camera.near = boundingSphereRadius * 0.01;
-        camera.far = boundingSphereRadius * 200;
+        camera.near = radius * 0.01;
+        camera.far = radius * 200;
         camera.updateProjectionMatrix();
 
         if (cameraRefs.controls.current) {
           // Don't set minimum distance for multiple objects
-          cameraRefs.controls.current.minDistance = (srcs.length === 1) ? boundingSphereRadius : Number.EPSILON;
-          cameraRefs.controls.current.maxDistance = boundingSphereRadius * 5;
+          cameraRefs.controls.current.minDistance = (srcs.length === 1) ? radius : Number.EPSILON;
+          cameraRefs.controls.current.maxDistance = radius * 5;
         }
       }
     }
   }
 
-  function setCameraUp() {
-    const upVectorToNumeric = {
-      'y-positive': [0, 1, 0],
-      'y-negative': [0, -1, 0],
-      'z-positive': [0, 0, 1],
-      'z-negative': [0, 0, -1]
-    };
-    const upVectorNumeric = upVectorToNumeric[upVector];
+  // Set rotation euler, matrix, and degrees from array of XYZ euler angles in radians
+  function setRotationFromArray(rotation: [number, number, number], setRotationDegrees?: boolean) {
+    setRotationEuler(rotationEuler.fromArray(rotation));
+    rotationMatrixRef.current.makeRotationFromEuler(rotationEuler);
 
-    const newCameraUp = new Vector3(upVectorNumeric[0], upVectorNumeric[1], upVectorNumeric[2]);
-    const cameraUpChange = !camera.up.equals(newCameraUp);
-    if (cameraUpChange) {
-      camera.up.copy(newCameraUp);
-      cameraRefs.controls.current?.updateCameraUp();
+    if (setRotationDegrees) {
+      setRotationXDegrees(rotationEuler.x * (180 / Math.PI));
+      setRotationYDegrees(rotationEuler.y * (180 / Math.PI));
+      setRotationZDegrees(rotationEuler.z * (180 / Math.PI));  
     }
-
-    return cameraUpChange;
   }
 
-  function getAxesProperties(): [size?: number | undefined] {
-    if (boundsRef.current) {
-      if (!boundingSphereRadius) boundingSphereRadius = getBoundingSphereRadius(boundsRef.current);
-      return [boundingSphereRadius * 2];
-    } else {
-      return [5];
-    }
+  // Set rotation euler, matrix, and degrees from matrix
+  function setRotationFromMatrix4(matrix: Matrix4) {
+    rotationMatrixRef.current.copy(matrix);
+    setRotationEuler(rotationEuler.setFromRotationMatrix(matrix, 'XYZ'));
+    setRotationXDegrees(rotationEuler.x * (180 / Math.PI));
+    setRotationYDegrees(rotationEuler.y * (180 / Math.PI));
+    setRotationZDegrees(rotationEuler.z * (180 / Math.PI));  
   }
 
   function getGridProperties(): [size?: number | undefined, divisions?: number | undefined] {
     if (boundsRef.current) {
-      if (!boundingSphereRadius) boundingSphereRadius = getBoundingSphereRadius(boundsRef.current);
+      if (!boundsSphereRef.current) boundsSphereRef.current = getBoundingSphere(boundsRef.current);
 
       const breakPoints = [0.001, 0.01, 0.1, 1.0, 10.0, 100.0];
       let cellWidth = 10.0; // maximum possible value, reduce to scale with object
 
       for (const breakPoint of breakPoints) {
-        if (boundingSphereRadius! < breakPoint) {
+        if (boundsSphereRef.current.radius! < breakPoint) {
           cellWidth = breakPoint/10.0;
           break;
         } 
@@ -233,13 +243,6 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
       }
     };
 
-    // zoom to fit bounds on double click on background
-    const handleOnPointerMissed = useDoubleClick(() => {
-      if (mode === 'scene' || mode === 'annotation') {
-        recenter();
-      }
-    });
-
     return (
       <group
         ref={boundsRef}
@@ -250,7 +253,6 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
             // clicking on an overlaid annotation label or description
             return;
           } else {
-            handleOnPointerMissed(e);
             setSelectedAnnotation(null);
           }
         }}>
@@ -303,31 +305,50 @@ function Scene({ envPreset, onLoad, src }: ViewerProps) {
     cameraRefs.controls.current!.getTarget(cameraTarget);
     cameraRefs.target.current = cameraTarget;
 
-    triggerCameraUpdateEvent({ cameraPosition, cameraTarget });
+    triggerCameraUpdateEvent({ cameraPosition, cameraTarget, rotationMatrix: rotationMatrixRef.current });
   }
 
   const Tools: { [key in Mode]: React.ReactElement } = {
-    annotation: <AnnotationTools cameraRefs={cameraRefs} />,
-    measurement: <MeasurementTools />,
+    annotation: <AnnotationTools cameraRefs={cameraRefs} rotationMatrixRef={rotationMatrixRef} />,
+    measurement: <MeasurementTools rotationMatrixRef={rotationMatrixRef} />,
     scene: <></>,
   };
 
   return (
     <>
       {orthographicEnabled ? <OrthographicCamera makeDefault position={[0, 0, 2]} /> : <PerspectiveCamera makeDefault fov={30} position={[0, 0, 2]} />}
-      <CameraControls ref={cameraRefs.controls} onChange={onCameraChange} />
+      <CameraControls ref={cameraRefs.controls} onChange={onCameraChange} makeDefault />
       <ambientLight intensity={ambientLightIntensity} />
-      <Bounds lineVisible={boundsEnabled && mode == 'scene'}>
-        <Suspense fallback={<Loader />}>
-          {srcs.map((src, index) => {
-            return <GLTF key={index} {...src} orientation={orientation} />;
-          })}
-        </Suspense>
-      </Bounds>
+
+      <Suspense fallback={<Loader />}>
+        <PivotControls
+          ref={rotationControlsRef}
+          autoTransform={false}
+          depthTest={false}
+          disableAxes={true} 
+          disableScaling={true} 
+          disableSliders={true} 
+          enabled={sceneControlsEnabled && mode == 'scene'}
+          fixed={true}
+          matrix={rotationMatrixRef.current}
+          onDrag={(local) => setRotationFromMatrix4(local)}
+          scale={300} 
+        >
+          <Bounds lineVisible={boundsEnabled && mode == 'scene'}>
+            {srcs.map((src, index) => { return (
+              <GLTF key={index} {...src} />
+            );})}
+          </Bounds>
+        </PivotControls>
+      </Suspense>
       <Environment preset={envPreset} />
       {Tools[mode]}
       { (gridEnabled && mode == 'scene') && <gridHelper args={getGridProperties()} />}
-      { (axesEnabled && mode == 'scene') && <axesHelper args={getAxesProperties()} />}
+      { (axesEnabled && mode == 'scene') && 
+        <GizmoHelper alignment="bottom-right" margin={[100, 100]}>
+          <GizmoViewport labelColor="white" axisHeadScale={1} />
+        </GizmoHelper>
+      }
     </>
   );
 }

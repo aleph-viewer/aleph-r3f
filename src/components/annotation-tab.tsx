@@ -5,9 +5,9 @@ import { Tooltip } from './ui/tooltip';
 import useKeyDown from '@/lib/hooks/use-key-press';
 import { useEventListener, useEventTrigger } from '@/lib/hooks/use-event';
 import useStore from '@/Store';
-import { Vector3 } from 'three';
+import { Matrix4, Vector3 } from 'three';
 import { Tab } from './tab';
-import { cn } from '@/lib/utils';
+import { applyMatrix4Inverse, cn } from '@/lib/utils';
 import { Instructions } from './instructions';
 import { AnnotationsDialog } from './import-annotations-dialog';
 import { Check, Pencil, View, X } from 'lucide-react';
@@ -24,6 +24,7 @@ function AnnotationTab() {
 
   const cameraPositionRef = useRef<Vector3>();
   const cameraTargetRef = useRef<Vector3>();
+  const rotationMatrixRef = useRef<Matrix4>(new Matrix4());
 
   useKeyDown('Escape', () => {
     setEditIdx(null);
@@ -32,6 +33,7 @@ function AnnotationTab() {
   const handleCameraUpdateEvent = (e: any) => {
     cameraPositionRef.current = e.detail.cameraPosition;
     cameraTargetRef.current = e.detail.cameraTarget;
+    rotationMatrixRef.current = e.detail.rotationMatrix;
   };
 
   useEventListener(CAMERA_UPDATE, handleCameraUpdateEvent);
@@ -78,8 +80,12 @@ function AnnotationTab() {
 
   function updateAnnotationCameraProps(idx: number) {
     const props = {
-      ...(cameraPositionRef.current !== undefined && { cameraPosition: cameraPositionRef.current }),
-      ...(cameraTargetRef.current !== undefined && { cameraTarget: cameraTargetRef.current })
+      ...(cameraPositionRef.current !== undefined && { 
+        cameraPosition: applyMatrix4Inverse(cameraPositionRef.current, rotationMatrixRef.current)
+      }),
+      ...(cameraTargetRef.current !== undefined && { 
+        cameraTarget: applyMatrix4Inverse(cameraTargetRef.current, rotationMatrixRef.current)
+      })
     }
     updateAnnotation(idx, props);
   }

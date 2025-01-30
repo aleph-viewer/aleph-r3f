@@ -21,7 +21,7 @@ export function SliderSelector({
       <Slider
         id={id}
         max={1}
-        defaultValue={[value]}
+        value={[value]}
         step={0.1}
         onValueChange={(value: number[]) => {
           onChange(value[0]);

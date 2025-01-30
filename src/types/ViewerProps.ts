@@ -5,6 +5,7 @@ export type ViewerProps = {
   envPreset: PresetsType;
   onLoad?: (src: SrcObj[]) => void;
   src: string | SrcObj | SrcObj[];
+  rotationPreset?: [number, number, number];
 };
 
 export type ViewerRef = {

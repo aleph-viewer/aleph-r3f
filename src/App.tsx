@@ -7,79 +7,100 @@ import { toast } from 'sonner';
 // @ts-ignore
 import DOMPurify from 'dompurify';
 import useStore from './Store';
+import { PresetsType } from '@react-three/drei/helpers/environment-assets';
 
 function App() {
   const viewerRef = useRef<ViewerRef>(null);
   const loadedUrlsRef = useRef<string[]>([]);
 
-  const { cameraMode } = useStore();
+  const { 
+    cameraMode, 
+    environmentMap, 
+    setAmbientLightIntensity, 
+    setEnvironmentMap
+  } = useStore();
+
+  // Configurable app data, includes list of models and scene/UI presets
+  const config = {
+    srcs: {
+      // 'Measurement Cube': {
+      //   url: 'https://cdn.glitch.global/afd88411-0206-477e-b65f-3d1f201de994/measurement_cube.glb?v=1710500461208',
+      //   label: 'Measurement Cube',
+      // },
+      'Flight Helmet':
+        'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/FlightHelmet/glTF/FlightHelmet.gltf',
+      'Roberto Clemente Batting Helmet':
+        'https://cdn.glitch.global/2658666b-2aa1-4395-8dfe-44a4aaaa0b16/nmah-1981_0706_06-clemente_helmet-100k-2048_std_draco.glb?v=1729600102458',
+      Shoe: {
+        url: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/MaterialsVariantsShoe/glTF-Binary/MaterialsVariantsShoe.glb',
+        requiredStatement:
+          '© 2021, Shopify. <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0 International</a> <br/> - Shopify for Everthing',
+      },
+      'Mosquito in Amber': {
+        url: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/MosquitoInAmber/glTF-Binary/MosquitoInAmber.glb',
+        requiredStatement:
+          '© 2018, Sketchfab. <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0 International</a> <br/> - Loic Norgeot for Model <br/> - Sketchfab for Real-time refraction',
+      },
+      'Thor and the Midgard Serpent': {
+        url: 'https://modelviewer.dev/assets/SketchfabModels/ThorAndTheMidgardSerpent.glb',
+        position: [0, 0, 0],
+        rotation: [0, 0, 0],
+        scale: [1, 1, 1],
+        requiredStatement:
+          '© 2019, <a href="https://sketchfab.com/MrTheRich">Mr. The Rich</a>. <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0 International</a>',
+      } as SrcObj,
+      'Multiple Objects': [
+        {
+          url: 'https://modelviewer.dev/assets/ShopifyModels/Mixer.glb',
+          position: [0, 0, 0],
+          rotation: [0, 0, 0],
+          scale: [1, 1, 1],
+        },
+        {
+          url: 'https://modelviewer.dev/assets/ShopifyModels/GeoPlanter.glb',
+          position: [0.5, 0, 0],
+          rotation: [0, 0, 0],
+          scale: [1, 1, 1],
+        },
+        {
+          url: 'https://modelviewer.dev/assets/ShopifyModels/ToyTrain.glb',
+          position: [1, 0, 0],
+          rotation: [0, 0, 0],
+          scale: [1, 1, 1],
+        },
+        {
+          url: 'https://modelviewer.dev/assets/ShopifyModels/Chair.glb',
+          position: [1.5, 0, 0],
+          rotation: [0, 0, 0],
+          scale: [1, 1, 1],
+        },
+      ] as SrcObj[],
+      'Stanford Bunny': 
+        'https://raw.githubusercontent.com/JulieWinchester/aleph-assets/main/bunny.glb',
+        // 'Frog (Draco) URL': 'https://aleph-gltf-models.netlify.app/Frog.glb',
+    },
+    scene: {
+      ambientLightIntensity: 0,
+      environmentMap: 'apartment',
+      rotation: [0, 0, 0], // Default rotation in radians
+    }
+  };
 
   // https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/Models/Models-showcase.md
   // https://github.com/google/model-viewer/tree/master/packages/modelviewer.dev/assets
   const [{ src }, _setLevaControls] = useControls(() => ({
     src: {
-      options: {
-        // 'Measurement Cube': {
-        //   url: 'https://cdn.glitch.global/afd88411-0206-477e-b65f-3d1f201de994/measurement_cube.glb?v=1710500461208',
-        //   label: 'Measurement Cube',
-        // },
-        'Flight Helmet':
-          'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/FlightHelmet/glTF/FlightHelmet.gltf',
-        'Roberto Clemente Batting Helmet':
-          'https://cdn.glitch.global/2658666b-2aa1-4395-8dfe-44a4aaaa0b16/nmah-1981_0706_06-clemente_helmet-100k-2048_std_draco.glb?v=1729600102458',
-        Shoe: {
-          url: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/MaterialsVariantsShoe/glTF-Binary/MaterialsVariantsShoe.glb',
-          requiredStatement:
-            '© 2021, Shopify. <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0 International</a> <br/> - Shopify for Everthing',
-        },
-        'Mosquito in Amber': {
-          url: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/MosquitoInAmber/glTF-Binary/MosquitoInAmber.glb',
-          requiredStatement:
-            '© 2018, Sketchfab. <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0 International</a> <br/> - Loic Norgeot for Model <br/> - Sketchfab for Real-time refraction',
-        },
-        'Thor and the Midgard Serpent': {
-          url: 'https://modelviewer.dev/assets/SketchfabModels/ThorAndTheMidgardSerpent.glb',
-          position: [0, 0, 0],
-          rotation: [0, 0, 0],
-          scale: [1, 1, 1],
-          requiredStatement:
-            '© 2019, <a href="https://sketchfab.com/MrTheRich">Mr. The Rich</a>. <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0 International</a>',
-        } as SrcObj,
-        'Multiple Objects': [
-          {
-            url: 'https://modelviewer.dev/assets/ShopifyModels/Mixer.glb',
-            position: [0, 0, 0],
-            rotation: [0, 0, 0],
-            scale: [1, 1, 1],
-          },
-          {
-            url: 'https://modelviewer.dev/assets/ShopifyModels/GeoPlanter.glb',
-            position: [0.5, 0, 0],
-            rotation: [0, 0, 0],
-            scale: [1, 1, 1],
-          },
-          {
-            url: 'https://modelviewer.dev/assets/ShopifyModels/ToyTrain.glb',
-            position: [1, 0, 0],
-            rotation: [0, 0, 0],
-            scale: [1, 1, 1],
-          },
-          {
-            url: 'https://modelviewer.dev/assets/ShopifyModels/Chair.glb',
-            position: [1.5, 0, 0],
-            rotation: [0, 0, 0],
-            scale: [1, 1, 1],
-          },
-        ] as SrcObj[],
-        'Stanford Bunny': 
-          'https://raw.githubusercontent.com/JulieWinchester/aleph-assets/main/bunny.glb',
-        // 'Frog (Draco) URL': 'https://aleph-gltf-models.netlify.app/Frog.glb',
-      },
+      options: config.srcs,
     },
-    // Recenter: button((_get) => {
-    //   viewerRef.current?.recenter();
-    // }),
   }));
+
+  useEffect(() => {
+    setAmbientLightIntensity(config.scene.ambientLightIntensity);
+  }, [config.scene.ambientLightIntensity]);
+
+  useEffect(() => {
+    setEnvironmentMap(config.scene.environmentMap as PresetsType);
+  }, [config.scene.environmentMap]);
 
   // src or camera mode changed
   useEffect(() => {
@@ -100,8 +121,9 @@ function App() {
       <div id="viewer">
         <Viewer
           ref={viewerRef}
-          envPreset='apartment'
+          envPreset={environmentMap}
           src={src}
+          rotationPreset={config.scene.rotation as [number, number, number]}
           onLoad={(srcs: SrcObj[]) => {
             console.log(`model${srcs.length > 1 ? 's' : ''} loaded`, srcs);
             // add loaded urls to array of already loaded urls
