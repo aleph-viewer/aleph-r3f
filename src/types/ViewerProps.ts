@@ -1,8 +1,9 @@
 import { PresetsType } from '@react-three/drei/helpers/environment-assets';
-import { SrcObj } from './index';
+import { Annotation, SrcObj } from './index';
 
 export type ViewerProps = {
-  envPreset: PresetsType;
+  annotations?: Annotation[];
+  environmentMap?: PresetsType;
   onLoad?: (src: SrcObj[]) => void;
   src: string | SrcObj | SrcObj[];
   rotationPreset?: [number, number, number];

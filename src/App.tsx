@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import DOMPurify from 'dompurify';
 import useStore from './Store';
 import { PresetsType } from '@react-three/drei/helpers/environment-assets';
+import { parseAnnotations } from './lib/utils';
 
 function App() {
   const viewerRef = useRef<ViewerRef>(null);
@@ -95,12 +96,9 @@ function App() {
   }));
 
   useEffect(() => {
-    setAmbientLightIntensity(config.scene.ambientLightIntensity);
-  }, [config.scene.ambientLightIntensity]);
-
-  useEffect(() => {
-    setEnvironmentMap(config.scene.environmentMap as PresetsType);
-  }, [config.scene.environmentMap]);
+    if (config.scene.ambientLightIntensity) setAmbientLightIntensity(config.scene.ambientLightIntensity);
+    if (config.scene.environmentMap) setEnvironmentMap(config.scene.environmentMap as PresetsType);
+  }, []);
 
   // src or camera mode changed
   useEffect(() => {
@@ -121,8 +119,9 @@ function App() {
       <div id="viewer">
         <Viewer
           ref={viewerRef}
-          envPreset={environmentMap}
           src={src}
+          annotations={config.scene.annotations ? parseAnnotations(config.scene.annotations) : undefined}
+          environmentMap={environmentMap}
           rotationPreset={config.scene.rotation as [number, number, number]}
           onLoad={(srcs: SrcObj[]) => {
             console.log(`model${srcs.length > 1 ? 's' : ''} loaded`, srcs);

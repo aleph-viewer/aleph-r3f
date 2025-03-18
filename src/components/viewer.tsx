@@ -35,7 +35,7 @@ import { AnnotationTools } from './annotation-tools';
 import MeasurementTools from './measurement-tools';
 import { getBoundingSphere, normalizeSrc } from '@/lib/utils';
 
-function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
+function Scene({ annotations, environmentMap, onLoad, src, rotationPreset }: ViewerProps) {
   const boundsRef = useRef<Group | null>(null);
   const boundsLineRef = useRef<Group | null>(null);
   const boundsSphereRef = useRef<Sphere | null>(null);
@@ -84,9 +84,10 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
 
   // src changed
   useEffect(() => {
-    const srcs: SrcObj[] = normalizeSrc(src);
-    setSrcs(srcs);
-    setAnnotations([]);
+    const isInitialLoad = srcs.length === 0;
+    const newSrcs: SrcObj[] = normalizeSrc(src);
+    setSrcs(newSrcs);
+    setAnnotations(isInitialLoad && annotations && annotations.length ? annotations : []);    
   }, [src]);
 
   // rotationXDegrees, rotationYDegrees, rotationZDegrees changed
@@ -311,7 +312,7 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
   const Tools: { [key in Mode]: React.ReactElement } = {
     annotation: <AnnotationTools cameraRefs={cameraRefs} rotationMatrixRef={rotationMatrixRef} />,
     measurement: <MeasurementTools rotationMatrixRef={rotationMatrixRef} />,
-    scene: <></>,
+    scene: <AnnotationTools cameraRefs={cameraRefs} rotationMatrixRef={rotationMatrixRef} viewOnly={true} />,
   };
 
   return (
@@ -341,7 +342,7 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
           </Bounds>
         </PivotControls>
       </Suspense>
-      <Environment preset={envPreset} />
+      <Environment preset={environmentMap} />
       {Tools[mode]}
       { (gridEnabled && mode == 'scene') && <gridHelper args={getGridProperties()} />}
       { (axesEnabled && mode == 'scene') && 

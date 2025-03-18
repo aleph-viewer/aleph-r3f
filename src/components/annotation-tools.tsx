@@ -9,7 +9,7 @@ import { Html } from '@react-three/drei';
 import { applyMatrix4Inverse, cn } from '@/lib/utils';
 import { useDrag } from '@use-gesture/react';
 
-export function AnnotationTools({ cameraRefs, rotationMatrixRef }: { cameraRefs: CameraRefs, rotationMatrixRef: React.MutableRefObject<Matrix4> }) {
+export function AnnotationTools({ cameraRefs, rotationMatrixRef, viewOnly }: { cameraRefs: CameraRefs, rotationMatrixRef: React.MutableRefObject<Matrix4>, viewOnly?: boolean }) {
   const { 
     annotations, 
     setAnnotations, 
@@ -108,6 +108,8 @@ export function AnnotationTools({ cameraRefs, rotationMatrixRef }: { cameraRefs:
   const triggerCameraControlsEnabledEvent = useEventTrigger(CAMERA_CONTROLS_ENABLED);
 
   const bind = useDrag((state) => {
+    if (viewOnly) return;
+
     const el = state.currentTarget as HTMLDivElement;
 
     // get the element's index from the data-index attribute
@@ -210,7 +212,7 @@ export function AnnotationTools({ cameraRefs, rotationMatrixRef }: { cameraRefs:
           onMouseUp={(_e: React.MouseEvent<SVGElement>) => {
             if (isFacingCamera(anno)) {
               // if was dragging this annotation
-              if (dragRef.current === index) {
+              if (dragRef.current === index && !viewOnly) {
                 const intersects: Intersection<Object3D>[] = getIntersects();
 
                 if (intersects.length > 0) {
@@ -272,6 +274,8 @@ export function AnnotationTools({ cameraRefs, rotationMatrixRef }: { cameraRefs:
         width="100vw"
         height="100vh"
         onDoubleClick={(_e: React.MouseEvent<SVGElement>) => {
+          if (viewOnly) return;
+
           const intersects: Intersection<Object3D>[] = getIntersects();
 
           if (intersects.length > 0) {
