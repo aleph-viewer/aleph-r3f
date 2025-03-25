@@ -183,7 +183,7 @@ function AnnotationTab() {
                               {
                                 'text-white': selectedAnnotation === idx,
                               }
-                            )}>{`${idx + 1}. ${anno.label || 'no label'}`}</h3>
+                            )}>{`${idx + 1}. ${anno.label || 'No Label'}`}</h3>
                           <p className="text-xs text-zinc-400 line-clamp-1 pr-1 whitespace-normal">{anno.description}</p>
                         </div>
                         <div className="flex items-center gap-2">

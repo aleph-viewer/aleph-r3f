@@ -34,6 +34,8 @@ import useTimeout from '@/lib/hooks/use-timeout';
 import { AnnotationTools } from './annotation-tools';
 import MeasurementTools from './measurement-tools';
 import { getBoundingSphere, normalizeSrc } from '@/lib/utils';
+import { ControlToolbar } from './control-toolbar';
+import { AnnotationToolbar } from './annotation-toolbar';
 
 function Scene({ annotations, environmentMap, onLoad, src, rotationPreset }: ViewerProps) {
   const boundsRef = useRef<Group | null>(null);
@@ -377,7 +379,7 @@ const Viewer = (props: ViewerProps, ref: ((instance: unknown) => void) | RefObje
   });
 
   return (
-    <>
+    <div className="w-full h-full relative">
       <Canvas
         ref={canvasRef}
         camera={{ fov: 30 }}
@@ -386,7 +388,9 @@ const Viewer = (props: ViewerProps, ref: ((instance: unknown) => void) | RefObje
         }}>
         <Scene {...props} />
       </Canvas>
-    </>
+      <AnnotationToolbar />
+      <ControlToolbar />
+    </div>
   );
 };
 
