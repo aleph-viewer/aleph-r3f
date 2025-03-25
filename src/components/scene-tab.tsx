@@ -3,12 +3,12 @@ import { AmbientLightSelector } from './ambient-light-selector';
 import { RotationAxesSelector } from './rotation-axes-selector';
 import { Tab } from './tab';
 import { EnvironmentMapSelector } from './environment-map-selector';
-import { SceneControlsSelector } from './scene-controls-selector';
+import { RotationControlsSelector } from './rotation-controls-selector';
 import { CameraModeSelector } from './camera-mode-selector';
 
 function SceneTab() {
   const {
-    sceneControlsEnabled,
+    rotationControlsEnabled,
   } = useStore();
 
   return (
@@ -16,8 +16,8 @@ function SceneTab() {
       <CameraModeSelector />
       <EnvironmentMapSelector />
       <AmbientLightSelector />
-      <SceneControlsSelector />
-      { sceneControlsEnabled && <RotationAxesSelector /> }
+      <RotationControlsSelector />
+      { rotationControlsEnabled && <RotationAxesSelector /> }
     </Tab>
   );
 }

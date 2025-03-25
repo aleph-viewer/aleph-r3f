@@ -23,7 +23,7 @@ type State = {
   rotationXDegrees: number;
   rotationYDegrees: number;
   rotationZDegrees: number;
-  sceneControlsEnabled: boolean;
+  rotationControlsEnabled: boolean;
   screenMeasurements: ScreenMeasurement[];
   selectedAnnotation: number | null;
   srcs: SrcObj[];
@@ -44,7 +44,7 @@ type State = {
   setRotationXDegrees: (rotationXDegrees: number) => void;
   setRotationYDegrees: (rotationYDegrees: number) => void;
   setRotationZDegrees: (rotationZDegrees: number) => void;
-  setSceneControlsEnabled: (sceneControlsEnabled: boolean) => void;
+  setRotationControlsEnabled: (rotationControlsEnabled: boolean) => void;
   setScreenMeasurements: (measurements: ScreenMeasurement[]) => void;
   setSelectedAnnotation: (selectedAnnotation: number | null) => void;
   setSrcs: (srcs: SrcObj[]) => void;
@@ -68,7 +68,7 @@ const useStore = create<State>((set) => ({
   rotationXDegrees: 0.0,
   rotationYDegrees: 0.0,
   rotationZDegrees: 0.0,
-  sceneControlsEnabled: false,
+  rotationControlsEnabled: false,
   screenMeasurements: [],
   selectedAnnotation: null,
   srcs: [],
@@ -168,9 +168,9 @@ const useStore = create<State>((set) => ({
       rotationZDegrees,
     }),
 
-  setSceneControlsEnabled: (sceneControlsEnabled: boolean) => 
+  setRotationControlsEnabled: (rotationControlsEnabled: boolean) => 
     set({
-      sceneControlsEnabled,
+      rotationControlsEnabled,
     }),
 
   setScreenMeasurements: (measurements: ScreenMeasurement[]) =>

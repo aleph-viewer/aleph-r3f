@@ -66,7 +66,7 @@ function Scene({ annotations, environmentMap, onLoad, src, rotationPreset }: Vie
     rotationXDegrees,
     rotationYDegrees,
     rotationZDegrees,
-    sceneControlsEnabled,
+    rotationControlsEnabled,
     setAnnotations,
     setLoading,
     setRotationEuler,
@@ -331,7 +331,7 @@ function Scene({ annotations, environmentMap, onLoad, src, rotationPreset }: Vie
           disableAxes={true} 
           disableScaling={true} 
           disableSliders={true} 
-          enabled={sceneControlsEnabled && mode == 'scene'}
+          enabled={rotationControlsEnabled && mode == 'scene'}
           fixed={true}
           matrix={rotationMatrixRef.current}
           onDrag={(local) => setRotationFromMatrix4(local)}
