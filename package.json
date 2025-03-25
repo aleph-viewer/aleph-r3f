@@ -76,6 +76,7 @@
   "dependencies": {
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/react-dropdown-menu": "^2.1.6",
     "@radix-ui/react-hover-card": "^1.0.6",
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-select": "^2.0.0",
@@ -83,7 +84,8 @@
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-switch": "^1.0.3",
     "@radix-ui/react-tabs": "^1.0.4",
-    "@react-three/drei": "^9.77.4",
+    "@radix-ui/react-toolbar": "^1.1.2",
+    "@react-three/drei": "^9.121.5",
     "@react-three/fiber": "^8.15.12",
     "@use-gesture/react": "^10.3.0",
     "class-variance-authority": "^0.7.0",
