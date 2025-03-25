@@ -124,14 +124,13 @@ function AnnotationTab() {
       <div className='flex flex-col justify-between grow'>
         <div className='grid gap-y-4'>
           <div className="overflow-y-auto overflow-x-hidden">
+            <Instructions>Double-click to create annotations, drag to reorder.</Instructions>
             {annotations.length ? (
               annotations.map((anno: Annotation, idx) => {
                 return (
                   <div
                     key={idx}
-                    className={cn('flex items-center justify-between my-2', {
-                      'cursor-move': editIdx === null,
-                    })}
+                    className={'my-4 cursor-pointer'}
                     draggable={editIdx === null}
                     onDragStart={(e) => dragStart(e)}
                     onDragEnter={(e) => dragEnter(e)}
@@ -139,8 +138,8 @@ function AnnotationTab() {
                     onDragEnd={drop}
                     data-idx={idx}>
                     {editIdx === idx && (
-                      <form onSubmit={handleSubmit} className="flex items-end justify-between w-full py-2">
-                        <div className="flex flex-col w-full mr-2">
+                      <form onSubmit={handleSubmit} className="flex flex-col items-end gap-2 w-full">
+                        <div className="flex flex-col w-full">
                           <input
                             type="text"
                             placeholder="Label"
@@ -186,7 +185,7 @@ function AnnotationTab() {
                             )}>{`${idx + 1}. ${anno.label || 'No Label'}`}</h3>
                           <p className="text-xs text-zinc-400 line-clamp-1 pr-1 whitespace-normal">{anno.description}</p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex gap-2 mt-2">
                           {/* set default camera view button */}
                           <Tooltip content="Set Default View">
                             <Button
