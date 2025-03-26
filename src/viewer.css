@@ -27,8 +27,8 @@ body.dragging {
 }
 
 .point {
-  fill: white;
-  stroke: black;
+  fill: black;
+  stroke: white;
   color: black;
   cursor: pointer;
   touch-action: none;
@@ -38,8 +38,8 @@ body.dragging {
 }
 
 .point.selected {
-  fill: black;
-  stroke: white;
+  fill: white;
+  stroke: black;
 }
 
 .point.facing-away {
