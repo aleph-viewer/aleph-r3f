@@ -16,7 +16,7 @@ const Tooltip: React.FC<TooltipProps> = (({ children, side = 'top', ...props }) 
 			<TooltipPrimitives.Root
 				{...otherProps}
 			>
-				<TooltipPrimitives.Trigger>
+				<TooltipPrimitives.Trigger asChild>
 					{children}
 				</TooltipPrimitives.Trigger>
 				<TooltipPrimitives.Content
