@@ -68,8 +68,6 @@ export function AnnotationTools({ cameraRefs, rotationMatrixRef, viewOnly }: { c
 
     if (annoEl) {
       annoEl.setAttribute('transform', `translate(${x}, ${y})`);
-    } else {
-      console.error('could not find annotation element');
     }
   }
 

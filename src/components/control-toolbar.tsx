@@ -74,7 +74,7 @@ export function ControlToolbar() {
           <Separator className="h-px mt-2 mb-2 bg-accent" />
 
           <Tooltip content="Recenter" side="left">
-            <Button className={cn(buttonVariants({ variant: 'outline', size: 'iconSm', className: 'test-white bg-black' }))}
+            <Button className={cn(buttonVariants({ variant: 'outline', size: 'iconSm', className: 'text-white bg-black' }))}
               onClick={() => {
                 triggerRecenterEvent();
               }}

@@ -33,7 +33,7 @@ const ToggleItem = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <ToolbarPrimitive.ToggleItem
     ref={ref}
-    className={cn('h-8 w-8 flex items-center justify-center border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[state=on]:bg-primary', className)}
+    className={cn('h-8 w-8 flex items-center justify-center border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-50 data-[state=on]:bg-primary', className)}
     {...props}
   />
 ));
@@ -52,10 +52,12 @@ function ToggleItemTooltip({
   tooltipSide?: 'top' | 'right' | 'bottom' | 'left',
 }) {
   return (
-    <Tooltip content={description} side={tooltipSide}>
-      <ToggleItem value={value} aria-label={description} disabled={disabled} className='first:mt-0 mt-0.5'>
-        { children }
-      </ToggleItem>  
+    <Tooltip content={description} side={tooltipSide} {...(disabled ? { open: false } : {})}>
+      <div>
+        <ToggleItem value={value} aria-label={description} disabled={disabled}>
+          { children }
+        </ToggleItem>  
+      </div>
     </Tooltip>
   );
 

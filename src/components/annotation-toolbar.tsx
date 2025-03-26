@@ -27,7 +27,7 @@ export function AnnotationToolbar() {
         <div className="absolute bottom-5 w-full flex justify-center" style={{ zIndex: 999 }}>
           <Toolbar orientation="horizontal" className="flex justify-between items-center w-[300px] control-component" style={{ borderRadius: '0.5rem' }}>
             <Tooltip content="Previous Annotation">
-              <Button className={cn(buttonVariants({ variant: 'outline', size: 'iconSm', className: 'test-white bg-black' }))}
+              <Button className={cn(buttonVariants({ variant: 'link', size: 'iconSm', className: 'text-white' }))}
                 onClick={() => {
                   const newIdx = selectedAnnotation !== null ? mod(selectedAnnotation - 1, annotations.length) : annotations.length - 1;
                   triggerAnnoClickEvent(annotations[newIdx]);
@@ -67,7 +67,7 @@ export function AnnotationToolbar() {
 
             
             <Tooltip content="Next Annotation">
-              <Button className={cn(buttonVariants({ variant: 'outline', size: 'iconSm', className: 'test-white bg-black' }))}
+              <Button className={cn(buttonVariants({ variant: 'link', size: 'iconSm', className: 'text-white' }))}
                 onClick={() => {
                   const newIdx = selectedAnnotation !== null ? mod(selectedAnnotation + 1, annotations.length) : 0;
                   triggerAnnoClickEvent(annotations[newIdx]);
