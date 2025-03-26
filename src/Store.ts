@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Annotation, CameraMode, SrcObj, Mode, ObjectMeasurement, ScreenMeasurement, MeasurementMode } from './types/';
+import { Annotation, CameraMode, SrcCollections, SrcObj, Mode, ObjectMeasurement, ScreenMeasurement, MeasurementMode } from './types/';
 import { Euler } from 'three';
 import { PresetsType } from '@react-three/drei/helpers/environment-assets';
 
@@ -26,6 +26,8 @@ type State = {
   rotationControlsEnabled: boolean;
   screenMeasurements: ScreenMeasurement[];
   selectedAnnotation: number | null;
+  srcCollections: SrcCollections;
+  srcCollectionSelected: number | null;
   srcs: SrcObj[];
   setAmbientLightIntensity: (ambientLightIntensity: number) => void;
   setAnnotations: (annotations: Annotation[]) => void;
@@ -47,6 +49,8 @@ type State = {
   setRotationControlsEnabled: (rotationControlsEnabled: boolean) => void;
   setScreenMeasurements: (measurements: ScreenMeasurement[]) => void;
   setSelectedAnnotation: (selectedAnnotation: number | null) => void;
+  setSrcCollections: (srcsCollections: SrcCollections) => void;
+  setSrcCollectionSelected: (srcCollectionSelected: number | null) => void;
   setSrcs: (srcs: SrcObj[]) => void;
 };
 
@@ -71,8 +75,10 @@ const useStore = create<State>((set) => ({
   rotationControlsEnabled: false,
   screenMeasurements: [],
   selectedAnnotation: null,
+  srcCollections: [],
+  srcCollectionSelected: null,
   srcs: [],
-
+  
   setAmbientLightIntensity: (ambientLightIntensity: number) =>
     set({
       ambientLightIntensity,
@@ -181,6 +187,16 @@ const useStore = create<State>((set) => ({
   setSelectedAnnotation: (selectedAnnotation: number | null) =>
     set({
       selectedAnnotation,
+    }),
+
+  setSrcCollections: (srcCollections: SrcCollections) =>
+    set({
+      srcCollections,
+    }),
+
+  setSrcCollectionSelected: (srcCollectionSelected: number | null) =>
+    set({
+      srcCollectionSelected,
     }),
 
   setSrcs: (srcs: SrcObj[]) =>

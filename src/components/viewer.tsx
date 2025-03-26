@@ -19,7 +19,6 @@ import { BoxHelper, Group, Object3D, Vector3, Matrix4, Sphere } from 'three';
 import useStore from '@/Store';
 import {
   ViewerProps as ViewerProps,
-  SrcObj,
   CAMERA_UPDATE,
   DBL_CLICK,
   Mode,
@@ -28,16 +27,18 @@ import {
   DROPPED_MEASUREMENT,
   RECENTER,
   CAMERA_CONTROLS_ENABLED,
+  Src,
+  Annotation,
 } from '@/types';
 import { useEventListener, useEventTrigger } from '@/lib/hooks/use-event';
 import useTimeout from '@/lib/hooks/use-timeout';
 import { AnnotationTools } from './annotation-tools';
 import MeasurementTools from './measurement-tools';
-import { getBoundingSphere, normalizeSrc } from '@/lib/utils';
+import { getBoundingSphere, normalizeSrc, parseAnnotations } from '@/lib/utils';
 import { ControlToolbar } from './control-toolbar';
 import { AnnotationToolbar } from './annotation-toolbar';
 
-function Scene({ annotations, environmentMap, onLoad, src, rotationPreset }: ViewerProps) {
+function Scene({ environmentMap, onLoad, src, srcCollections, rotationPreset }: ViewerProps) {
   const boundsRef = useRef<Group | null>(null);
   const boundsLineRef = useRef<Group | null>(null);
   const boundsSphereRef = useRef<Sphere | null>(null);
@@ -74,6 +75,8 @@ function Scene({ annotations, environmentMap, onLoad, src, rotationPreset }: Vie
     setRotationYDegrees,
     setRotationZDegrees,
     setSelectedAnnotation,
+    setSrcCollections,
+    setSrcCollectionSelected,
     setSrcs,
     srcs,
   } = useStore();
@@ -84,13 +87,32 @@ function Scene({ annotations, environmentMap, onLoad, src, rotationPreset }: Vie
 
   const triggerCameraUpdateEvent = useEventTrigger(CAMERA_UPDATE);
 
-  // src changed
+  // src or srcCollections changed
   useEffect(() => {
-    const isInitialLoad = srcs.length === 0;
-    const newSrcs: SrcObj[] = normalizeSrc(src);
-    setSrcs(newSrcs);
-    setAnnotations(isInitialLoad && annotations && annotations.length ? annotations : []);    
-  }, [src]);
+    if (srcs.length === 0) {
+      let newSrc: Src | undefined = undefined;
+      if (src) {
+        newSrc = src;
+      } else if (srcCollections && srcCollections.length) {
+        newSrc = srcCollections[0].src;
+        setSrcCollectionSelected(0);
+        setSrcCollections(srcCollections);
+      }
+
+      if (newSrc) {
+        const normalizedSrc = normalizeSrc(newSrc);
+        const srcAnnotations = parseAnnotations(normalizedSrc.reduce(
+          (acc: Annotation[], src) => { return acc.concat(src.annotations || []) }, 
+          []
+        ));
+        setSrcs(normalizedSrc);
+        setAnnotations(srcAnnotations && srcAnnotations.length ? srcAnnotations : []); 
+        // Camera will be recentered when loading is complete
+      }
+    } else {
+      recenter(true);
+    }
+  }, [src, srcCollections]);
 
   // rotationXDegrees, rotationYDegrees, rotationZDegrees changed
   useEffect(() => {  

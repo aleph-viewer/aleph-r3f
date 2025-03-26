@@ -5,14 +5,17 @@ import { Tab } from './tab';
 import { EnvironmentMapSelector } from './environment-map-selector';
 import { RotationControlsSelector } from './rotation-controls-selector';
 import { CameraModeSelector } from './camera-mode-selector';
+import { SourceSelector } from './source-selector';
 
 function SceneTab() {
   const {
+    srcCollections,
     rotationControlsEnabled,
   } = useStore();
 
   return (
     <Tab>
+      { srcCollections.length && <SourceSelector /> }
       <CameraModeSelector />
       <EnvironmentMapSelector />
       <AmbientLightSelector />
