@@ -112,7 +112,7 @@ function Scene({ environmentMap, onLoad, src, srcCollections, rotationPreset }: 
     } else {
       recenter(true);
     }
-  }, [src, srcCollections]);
+  }, [srcs]);
 
   // rotationXDegrees, rotationYDegrees, rotationZDegrees changed
   useEffect(() => {  
