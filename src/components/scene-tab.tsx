@@ -15,7 +15,7 @@ function SceneTab() {
 
   return (
     <Tab>
-      { srcCollections.length && <SourceSelector /> }
+      { srcCollections.length > 0 && <SourceSelector /> }
       <CameraModeSelector />
       <EnvironmentMapSelector />
       <AmbientLightSelector />

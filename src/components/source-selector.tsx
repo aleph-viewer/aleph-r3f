@@ -10,12 +10,20 @@ export function SourceSelector() {
     srcCollections, 
     srcCollectionSelected, 
     setAnnotations,
+    setAxesEnabled,
+    setBoundsEnabled,
+    setGridEnabled,
     setSrcs, 
     setSrcCollectionSelected 
   } = useStore();
  
   const handleChange = (value: string) => {
     setSrcCollectionSelected(parseInt(value));
+
+    // Disable axes, bounds, and grid
+    setAxesEnabled(false);
+    setBoundsEnabled(false);
+    setGridEnabled(false);
 
     const normalizedSrc = normalizeSrc(srcCollections[parseInt(value)].src);
     const srcAnnotations = parseAnnotations(normalizedSrc.reduce(
