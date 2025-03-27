@@ -80,7 +80,7 @@ export function ScreenMeasurementTools() {
         />
         <foreignObject 
           className="measurement-label"
-          x={avgX - 30}
+          x={avgX - 50}
           y={avgY - 15}
           data-idx0={idx0}
           data-idx1={idx1}
