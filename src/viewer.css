@@ -42,12 +42,6 @@ body.dragging {
   stroke: black;
 }
 
-.point.facing-away {
-  opacity: 20%;
-  transition: opacity 0.25s ease-in-out;
-  cursor: default;
-}
-
 .point .label {
   font-weight: 500; /* equivalent to font-medium in Tailwind */
 }
@@ -68,8 +62,14 @@ body.dragging {
   color: #abb6c6; /* equivalent to text-gray-300 in Tailwind */
 }
 
+.facing-away {
+  opacity: 20%;
+  transition: opacity 0.25s ease-in-out;
+  cursor: default;
+}
+
 .measurement-label {
-  width: 80px;
+  width: 100px;
   height: 30px;
   user-select: none;
 }
@@ -84,6 +84,8 @@ body.dragging {
   text-align: center;
   color: black;
   font-size: small;
+  border-radius: 0.5rem;
+  border: 1px solid black;
 }
 
 .angle-label {
