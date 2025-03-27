@@ -37,6 +37,7 @@ import MeasurementTools from './measurement-tools';
 import { getBoundingSphere, normalizeSrc, parseAnnotations } from '@/lib/utils';
 import { ControlToolbar } from './control-toolbar';
 import { AnnotationToolbar } from './annotation-toolbar';
+import { BoundsText } from './bounds-text';
 
 function Scene({ environmentMap, onLoad, src, srcCollections, rotationPreset }: ViewerProps) {
   const boundsRef = useRef<Group | null>(null);
@@ -282,6 +283,7 @@ function Scene({ environmentMap, onLoad, src, srcCollections, rotationPreset }: 
           }
         }}>
         {lineVisible ? <group ref={boundsLineRef}>{children}</group> : children}
+        { lineVisible && <BoundsText boundsRef={boundsRef} rotationMatrixRef={rotationMatrixRef} /> }
       </group>
     );
   }
