@@ -33,7 +33,6 @@ export function SourceSelector() {
     setSrcs(normalizedSrc);
     setAnnotations(srcAnnotations && srcAnnotations.length ? srcAnnotations : []); 
 
-    setSrcs(normalizeSrc(srcCollections[parseInt(value)].src)); 
   };
 
   return (
