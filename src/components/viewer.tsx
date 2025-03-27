@@ -39,7 +39,7 @@ import { ControlToolbar } from './control-toolbar';
 import { AnnotationToolbar } from './annotation-toolbar';
 import { BoundsText } from './bounds-text';
 
-function Scene({ environmentMap, onLoad, src, srcCollections, rotationPreset }: ViewerProps) {
+function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, rotationPreset }: ViewerProps) {
   const boundsRef = useRef<Group | null>(null);
   const boundsLineRef = useRef<Group | null>(null);
   const boundsSphereRef = useRef<Sphere | null>(null);
@@ -71,6 +71,7 @@ function Scene({ environmentMap, onLoad, src, srcCollections, rotationPreset }: 
     rotationControlsEnabled,
     setAnnotations,
     setLoading,
+    setMeasurementUnits,
     setRotationEuler,
     setRotationXDegrees,
     setRotationYDegrees,
@@ -87,6 +88,10 @@ function Scene({ environmentMap, onLoad, src, srcCollections, rotationPreset }: 
   );
 
   const triggerCameraUpdateEvent = useEventTrigger(CAMERA_UPDATE);
+
+  useEffect(() => {
+    if (measurementUnits) setMeasurementUnits(measurementUnits);
+  }, []);
 
   // src or srcCollections changed
   useEffect(() => {
