@@ -3,7 +3,7 @@
 import useStore from '@/Store';
 import { OptionSelector } from './option-selector';
 import { normalizeSrc, parseAnnotations } from '@/lib/utils';
-import { Annotation } from '@/types';
+import { SrcAnnotation } from '@/types';
 
 export function SourceSelector() {
   const { 
@@ -27,7 +27,7 @@ export function SourceSelector() {
 
     const normalizedSrc = normalizeSrc(srcCollections[parseInt(value)].src);
     const srcAnnotations = parseAnnotations(normalizedSrc.reduce(
-      (acc: Annotation[], src) => { return acc.concat(src.annotations || []) }, 
+      (acc: SrcAnnotation[], src) => { return acc.concat(src.annotations || []) }, 
       []
     ));
     setSrcs(normalizedSrc);

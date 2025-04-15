@@ -28,7 +28,7 @@ import {
   RECENTER,
   CAMERA_CONTROLS_ENABLED,
   Src,
-  Annotation,
+  SrcAnnotation,
 } from '@/types';
 import { useEventListener, useEventTrigger } from '@/lib/hooks/use-event';
 import useTimeout from '@/lib/hooks/use-timeout';
@@ -108,7 +108,7 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
       if (newSrc) {
         const normalizedSrc = normalizeSrc(newSrc);
         const srcAnnotations = parseAnnotations(normalizedSrc.reduce(
-          (acc: Annotation[], src) => { return acc.concat(src.annotations || []) }, 
+          (acc: SrcAnnotation[], src) => { return acc.concat(src.annotations || []) }, 
           []
         ));
         setSrcs(normalizedSrc);
