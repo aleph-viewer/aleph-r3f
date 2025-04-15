@@ -69,11 +69,37 @@ export const downloadJsonFile = (json: string) => {
 }
 
 export const parseAnnotations = (value: any) => {
-  value.forEach((anno: any) => {
-    anno.cameraPosition = new Vector3().fromArray(Object.values(anno.cameraPosition));
-    anno.cameraTarget = new Vector3().fromArray(Object.values(anno.cameraTarget));
-    anno.normal = new Vector3().fromArray(Object.values(anno.normal));
-    anno.position = new Vector3().fromArray(Object.values(anno.position));
+  console.log(value);
+  value.map((anno: any) => {
+    if (anno.position) {
+      anno.position = new Vector3().fromArray(Object.values(anno.position));
+    }
+
+    if (anno.normal) {
+      anno.normal = new Vector3().fromArray(Object.values(anno.normal));
+    } else {
+      anno.normal = new Vector3(0, 0, 1);
+    }
+
+    if (anno.cameraPosition) {
+      anno.cameraPosition = new Vector3().fromArray(Object.values(anno.cameraPosition));
+    } else if (anno.position && anno.position instanceof Vector3) {
+      anno.cameraPosition = anno.position.clone().setZ(anno.position.z + 1);
+    }
+    
+    if (anno.cameraTarget) {
+      anno.cameraTarget = new Vector3().fromArray(Object.values(anno.cameraTarget));
+    } else if (anno.position && anno.position instanceof Vector3) {
+      anno.cameraTarget = anno.position.clone();
+    }
+
+    return anno;
+  }).filter((anno: any) => {
+    // Remove any annotations that don't have a position
+    if (!anno.position) {
+      console.warn("Annotation without position:", anno);
+      return false;
+    }
   });
 
   return value;
