@@ -164,7 +164,7 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
   function zoomToObject(object: Object3D, instant?: boolean, padding: number | undefined = undefined) {
     if (!padding) {
       if (!boundsSphereRef.current) boundsSphereRef.current = getBoundingSphere(object);
-      padding = boundsSphereRef.current.radius * 0.1;
+      padding = boundsSphereRef.current.radius * 0.2;
     }
 
     cameraRefs.controls.current!.fitToBox(object, !instant, {
