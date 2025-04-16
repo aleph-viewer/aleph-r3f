@@ -38,8 +38,9 @@ export function AnnotationTools({
       let intersects = null;
       if (!anno.normal && boundsSphereRef.current) {
         // Use face intersecting vector from anno to scene center for normal
+        // To account for annos inside models, cast from position beyond anno to center
         intersects = getIntersectsPoints(scene, 
-          anno.position!, 
+          v1.subVectors(anno.position!, boundsSphereRef.current.center).multiplyScalar(1.1).add(boundsSphereRef.current.center), 
           boundsSphereRef.current.center,
           raycaster
         );
