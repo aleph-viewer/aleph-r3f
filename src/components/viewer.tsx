@@ -19,6 +19,7 @@ import { BoxHelper, Group, Object3D, Vector3, Matrix4, Sphere } from 'three';
 import useStore from '@/Store';
 import {
   ViewerProps as ViewerProps,
+  CAMERA_LOADING_DONE,
   CAMERA_UPDATE,
   DBL_CLICK,
   Mode,
@@ -87,13 +88,15 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
     new Matrix4().makeRotationFromEuler(rotationEuler)
   );
 
+  const triggerCameraLoadingDoneEvent = useEventTrigger(CAMERA_LOADING_DONE);
   const triggerCameraUpdateEvent = useEventTrigger(CAMERA_UPDATE);
 
+  // Initial load, only do this on component mount
   useEffect(() => {
     if (measurementUnits) setMeasurementUnits(measurementUnits);
   }, []);
 
-  // src or srcCollections changed
+  // src or srcCollections changed, set Srcs and initiate loading
   useEffect(() => {
     if (srcs.length === 0) {
       let newSrc: Src | undefined = undefined;
@@ -120,6 +123,23 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
     }
   }, [srcs]);
 
+  // When loaded, immediately set initial rotation
+  useEffect(() => {
+    if (!loading && rotationPreset) setRotationFromArray(rotationPreset, true); 
+  }, [loading]);
+
+  // When loaded or camera type changed, after a delay, zoom to object(s) instantaneously
+  useTimeout(
+    () => {
+      if (!loading) {
+        recenter(true);
+        triggerCameraLoadingDoneEvent();
+      }
+    },
+    1,
+    [loading, cameraMode]
+  );
+
   // rotationXDegrees, rotationYDegrees, rotationZDegrees changed
   useEffect(() => {  
     setRotationFromArray([
@@ -128,23 +148,6 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
       rotationZDegrees * (Math.PI / 180)
     ])
   }, [rotationEuler, rotationXDegrees, rotationYDegrees, rotationZDegrees]);
-
-  // When loaded, set initial rotation
-  // todo: this looks good, but wrap up all the rotation setting in functions
-  useEffect(() => {
-    if (!loading && rotationPreset) setRotationFromArray(rotationPreset, true); 
-  }, [loading]);
-
-  // when loaded or camera type changed, zoom to object(s) instantaneously
-  useTimeout(
-    () => {
-      if (!loading) {
-        recenter(true);
-      }
-    },
-    1,
-    [loading, cameraMode]
-  );
 
   const handleRecenterEvent = (e: any) => {
     recenter(e.detail);
@@ -341,9 +344,9 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
   }
 
   const Tools: { [key in Mode]: React.ReactElement } = {
-    annotation: <AnnotationTools cameraRefs={cameraRefs} rotationMatrixRef={rotationMatrixRef} />,
+    annotation: <AnnotationTools cameraRefs={cameraRefs} boundsSphereRef={boundsSphereRef} rotationMatrixRef={rotationMatrixRef} />,
     measurement: <MeasurementTools rotationMatrixRef={rotationMatrixRef} />,
-    scene: <AnnotationTools cameraRefs={cameraRefs} rotationMatrixRef={rotationMatrixRef} viewOnly={true} />,
+    scene: <AnnotationTools cameraRefs={cameraRefs} boundsSphereRef={boundsSphereRef} rotationMatrixRef={rotationMatrixRef} viewOnly={true} />,
   };
 
   return (

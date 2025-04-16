@@ -1,15 +1,25 @@
 import { useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import useStore from '@/Store';
-import { Intersection, Matrix4, Object3D, Vector3 } from 'three';
+import { Intersection, Matrix4, Object3D, Sphere, Vector3 } from 'three';
 import { useEventListener, useEventTrigger } from '@/lib/hooks/use-event';
-import { ANNO_CLICK, Annotation, CAMERA_CONTROLS_ENABLED, CameraRefs } from '@/types';
+import { ANNO_CLICK, Annotation, CAMERA_CONTROLS_ENABLED, CAMERA_LOADING_DONE, CameraRefs } from '@/types';
 import React from 'react';
 import { Html } from '@react-three/drei';
-import { applyMatrix4Inverse, calculateScreenPosition, cn, getIntersects, isFacingCamera } from '@/lib/utils';
+import { applyMatrix4Inverse, calculateScreenPosition, cn, getIntersects, getIntersectsPoints, isFacingCamera } from '@/lib/utils';
 import { useDrag } from '@use-gesture/react';
 
-export function AnnotationTools({ cameraRefs, rotationMatrixRef, viewOnly }: { cameraRefs: CameraRefs, rotationMatrixRef: React.MutableRefObject<Matrix4>, viewOnly?: boolean }) {
+export function AnnotationTools({ 
+  cameraRefs, 
+  boundsSphereRef,
+  rotationMatrixRef, 
+  viewOnly 
+}: { 
+  cameraRefs: CameraRefs, 
+  boundsSphereRef: React.MutableRefObject<Sphere | null>,
+  rotationMatrixRef: React.MutableRefObject<Matrix4>, 
+  viewOnly?: boolean 
+}) {
   const { 
     annotations, 
     setAnnotations, 
@@ -23,19 +33,66 @@ export function AnnotationTools({ cameraRefs, rotationMatrixRef, viewOnly }: { c
   const v1 = new Vector3();
   const v2 = new Vector3();
 
-  function zoomToAnnotation(annotation: Annotation) {
-    v1.copy(annotation.cameraPosition!).applyMatrix4(rotationMatrixRef.current);
-    v2.copy(annotation.cameraTarget!).applyMatrix4(rotationMatrixRef.current);
+  function initializeAnnotations() {
+    setAnnotations(annotations.map(anno => {
+      let intersects = null;
+      if (!anno.normal && boundsSphereRef.current) {
+        // Use face intersecting vector from anno to scene center for normal
+        intersects = getIntersectsPoints(scene, 
+          anno.position!, 
+          boundsSphereRef.current.center,
+          raycaster
+        );
 
-    cameraRefs.controls.current!.setLookAt(
-      v1.x,
-      v1.y,
-      v1.z,
-      v2.x,
-      v2.y,
-      v2.z,
-      true
-    )
+        if (intersects.length > 0) anno.normal = intersects[0].face?.normal;
+      }
+
+      if (!anno.cameraPosition) {
+        if (intersects && intersects.length > 0 && intersects[0].face && boundsSphereRef.current) {
+          // Use normal of intersecting face to calculate camera position
+          cameraRefs.controls.current!.getPosition(v1);
+          const distance = v1.distanceTo(boundsSphereRef.current!.center);
+
+          v2.copy(intersects[0].face?.normal).normalize().multiplyScalar(distance).add(boundsSphereRef.current!.center);
+          anno.cameraPosition = applyMatrix4Inverse(v2, rotationMatrixRef.current);
+        } else {
+          // Use default camera position
+          cameraRefs.controls.current!.getPosition(v1);
+          anno.cameraPosition = applyMatrix4Inverse(v1, rotationMatrixRef.current);
+        }        
+      }
+
+      if (!anno.cameraTarget) {
+        // Use default camera target
+        cameraRefs.controls.current!.getTarget(v1);
+        anno.cameraTarget = applyMatrix4Inverse(v1, rotationMatrixRef.current);
+      }
+
+      return anno;
+    }));
+  }
+
+  const handleCameraLoadingDone = () => {
+    initializeAnnotations();
+  };
+
+  useEventListener(CAMERA_LOADING_DONE, handleCameraLoadingDone);
+
+  function zoomToAnnotation(annotation: Annotation) {
+    if (annotation.cameraPosition && annotation.cameraTarget) {
+      v1.copy(annotation.cameraPosition).applyMatrix4(rotationMatrixRef.current);
+      v2.copy(annotation.cameraTarget!).applyMatrix4(rotationMatrixRef.current);
+
+      cameraRefs.controls.current!.setLookAt(
+        v1.x,
+        v1.y,
+        v1.z,
+        v2.x,
+        v2.y,
+        v2.z,
+        true
+      )
+    }
   }
 
   const handleAnnotationClick = (e: any) => {

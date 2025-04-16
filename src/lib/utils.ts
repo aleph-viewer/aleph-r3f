@@ -77,20 +77,14 @@ export const parseAnnotations = (value: any) => {
 
     if (anno.normal) {
       anno.normal = new Vector3().fromArray(Object.values(anno.normal));
-    } else {
-      anno.normal = new Vector3(0, 0, 1);
     }
 
     if (anno.cameraPosition) {
       anno.cameraPosition = new Vector3().fromArray(Object.values(anno.cameraPosition));
-    } else if (anno.position && anno.position instanceof Vector3) {
-      anno.cameraPosition = anno.position.clone().setZ(anno.position.z + 1);
     }
     
     if (anno.cameraTarget) {
       anno.cameraTarget = new Vector3().fromArray(Object.values(anno.cameraTarget));
-    } else if (anno.position && anno.position instanceof Vector3) {
-      anno.cameraTarget = anno.position.clone();
     }
 
     return anno;
@@ -131,6 +125,17 @@ export function getIntersects(
   return raycaster.intersectObjects(scene.children, true);
 }
 
+export function getIntersectsPoints(
+  scene: Scene,
+  point1: Vector3,
+  point2: Vector3,
+  raycaster: Raycaster
+): Intersection<Object3D<Object3DEventMap>>[] {
+  const direction = point2.clone().sub(point1).normalize();
+  raycaster.set(point1, direction);
+  return raycaster.intersectObjects(scene.children, true);
+}
+
 // Does the vector face the camera?
 export function isFacingCamera(
   position: Vector3,
@@ -138,6 +143,8 @@ export function isFacingCamera(
   camera: Camera,
   rotationMatrixRef: React.MutableRefObject<Matrix4>
 ): boolean {
+  if (!position || !normal || !camera) return false;
+
   const cameraDirection: Vector3 = camera.position.clone().normalize().sub(
     position.clone().normalize().applyMatrix4(rotationMatrixRef.current)
   );
