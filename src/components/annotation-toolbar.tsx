@@ -24,7 +24,7 @@ export function AnnotationToolbar() {
   return (
     <>
       { (annotations.length > 0) && 
-        <div className="absolute bottom-5 w-full flex justify-center" style={{ zIndex: 999 }}>
+        <div id="annotation-toolbar" className="absolute bottom-5 w-full flex justify-center" style={{ zIndex: 999 }}>
           <Toolbar orientation="horizontal" className="flex justify-between items-center w-[300px] control-component" style={{ borderRadius: '0.5rem' }}>
             <Tooltip content="Previous Annotation">
               <Button className={cn(buttonVariants({ variant: 'link', size: 'iconSm', className: 'text-white' }))}
