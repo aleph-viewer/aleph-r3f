@@ -44,7 +44,7 @@ export function AnnotationToolbar() {
                   { selectedAnnotation !== null ? annotations[selectedAnnotation].label || `No Label` : 'Select Annotation' }
                 </span>
               </DropdownTrigger>
-              <DropdownContent style={{ zIndex: 999 }}>
+              <DropdownContent side="top" style={{ zIndex: 999 }}>
                 { annotations.map((anno, idx) => 
                   <DropdownItem 
                     onSelect={(event) => {
