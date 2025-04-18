@@ -136,7 +136,7 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
     if (!loading && rotationPreset) setRotationFromArray(rotationPreset, true); 
   }, [loading]);
 
-  const requestJson = useEventTrigger(JSON_EMIT_REQUEST);
+  // const requestJson = useEventTrigger(JSON_EMIT_REQUEST);
 
   // When loaded or camera type changed, after a delay, zoom to object(s) instantaneously
   useTimeout(
@@ -144,8 +144,6 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
       if (!loading) {
         recenter(true);
         triggerCameraLoadingDoneEvent();
-        console.log('requesting json');
-        requestJson();
       }
     },
     1,
@@ -199,11 +197,12 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
 
   useEventListener(CAMERA_CONTROLS_ENABLED, handleCameraEnabledEvent);
 
-  const handleEmitJson = () => {
+  const handleEmitJsonRequest = () => {
+    console.log('emitting json in response to event');
     triggerJsonEmitEvent(sceneJson);
   };
 
-  useEventListener(JSON_EMIT_REQUEST, handleEmitJson);
+  useEventListener(JSON_EMIT_REQUEST, handleEmitJsonRequest);
 
   // Methods
 
