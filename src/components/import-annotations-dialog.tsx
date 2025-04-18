@@ -20,48 +20,18 @@ import { Tooltip } from './ui/tooltip';
 export function AnnotationsDialog() {
   const [open, setOpen] = useState(false);
   const { 
-    ambientLightIntensity,
     annotations, 
-    environmentMap,
+    sceneJson,
     rotationEuler,
-    rotationXDegrees,
-    rotationYDegrees,
-    rotationZDegrees,
     setAmbientLightIntensity,
     setAnnotations,
     setEnvironmentMap,
+    setSceneJson,
     setRotationEuler,
     setRotationXDegrees,
     setRotationYDegrees,
     setRotationZDegrees,
   } = useStore();
-
-  function stringifyJson(value: any) {
-    return JSON.stringify(value, null, 2);
-  }
-
-  const [json, setJson] = useState<string>('');
-
-  useEffect(() => {
-    setJson(stringifyJson(
-      { 
-        annotations: annotations, 
-        scene: {
-          ambientLightIntensity: ambientLightIntensity,
-          environmentMap: environmentMap,
-          rotation: [rotationEuler.x, rotationEuler.y, rotationEuler.z]
-        }, 
-      }
-    ));
-  }, [
-    ambientLightIntensity,
-    annotations, 
-    environmentMap, 
-    rotationEuler, 
-    rotationXDegrees, 
-    rotationYDegrees, 
-    rotationZDegrees
-  ]);
 
   const jsonRef = createRef<HTMLTextAreaElement>();
 
@@ -84,7 +54,7 @@ export function AnnotationsDialog() {
 
   function updateJson() {
     try {
-      const parsed = JSON.parse(json);
+      const parsed = JSON.parse(sceneJson);
 
       if (parsed.annotations) {
         const annos = parseAnnotations(parsed.annotations);
@@ -136,9 +106,9 @@ export function AnnotationsDialog() {
             <Textarea
               id="json"
               ref={jsonRef}
-              defaultValue={json}
+              defaultValue={sceneJson}
               onChange={(value) => {
-                setJson(value.target.value);
+                setSceneJson(value.target.value);
               }}
             />
           </div>
@@ -150,7 +120,7 @@ export function AnnotationsDialog() {
               onClick={() => {
                 jsonRef.current?.focus();
                 jsonRef.current?.select();
-                copyText(json);
+                copyText(sceneJson);
               }}
             >
               <span className="sr-only">Copy</span>
@@ -176,7 +146,7 @@ export function AnnotationsDialog() {
               type="button"
               size="sm"
               className="px-3 w-full"
-              onClick={() => { downloadJsonFile(json); }}
+              onClick={() => { downloadJsonFile(sceneJson); }}
             >
               <span className="sr-only">Download as JSON</span>
               <div className="text-black mr-1 min-w-10">JSON</div>

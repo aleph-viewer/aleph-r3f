@@ -184,3 +184,7 @@ export function getElementTranslate(el: HTMLElement): number[] | null {
 export function setElementTranslate(el: HTMLElement, x: number, y: number) {
   el?.setAttribute('transform', `translate(${x}, ${y})`);
 }
+
+export function stringifyJson(value: any) {
+  return JSON.stringify(value, null, 2);
+}

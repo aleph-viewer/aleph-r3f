@@ -30,12 +30,14 @@ import {
   CAMERA_CONTROLS_ENABLED,
   Src,
   SrcAnnotation,
+  JSON_EMIT_REQUEST,
+  JSON_EMIT,
 } from '@/types';
 import { useEventListener, useEventTrigger } from '@/lib/hooks/use-event';
 import useTimeout from '@/lib/hooks/use-timeout';
 import { AnnotationTools } from './annotation-tools';
 import MeasurementTools from './measurement-tools';
-import { getBoundingSphere, normalizeSrc, parseAnnotations } from '@/lib/utils';
+import { getBoundingSphere, normalizeSrc, parseAnnotations, stringifyJson } from '@/lib/utils';
 import { ControlToolbar } from './control-toolbar';
 import { AnnotationToolbar } from './annotation-toolbar';
 import { BoundsText } from './bounds-text';
@@ -58,6 +60,7 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
 
   const {
     ambientLightIntensity,
+    annotations,
     axesEnabled,
     boundsEnabled,
     cameraMode,
@@ -70,6 +73,7 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
     rotationYDegrees,
     rotationZDegrees,
     rotationControlsEnabled,
+    sceneJson,
     setAnnotations,
     setLoading,
     setMeasurementUnits,
@@ -78,6 +82,7 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
     setRotationYDegrees,
     setRotationZDegrees,
     setSelectedAnnotation,
+    setSceneJson,
     setSrcCollections,
     setSrcCollectionSelected,
     setSrcs,
@@ -90,6 +95,9 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
 
   const triggerCameraLoadingDoneEvent = useEventTrigger(CAMERA_LOADING_DONE);
   const triggerCameraUpdateEvent = useEventTrigger(CAMERA_UPDATE);
+  const triggerJsonEmitEvent = useEventTrigger(JSON_EMIT);
+
+  // Set initial state
 
   // Initial load, only do this on component mount
   useEffect(() => {
@@ -128,17 +136,23 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
     if (!loading && rotationPreset) setRotationFromArray(rotationPreset, true); 
   }, [loading]);
 
+  const requestJson = useEventTrigger(JSON_EMIT_REQUEST);
+
   // When loaded or camera type changed, after a delay, zoom to object(s) instantaneously
   useTimeout(
     () => {
       if (!loading) {
         recenter(true);
         triggerCameraLoadingDoneEvent();
+        console.log('requesting json');
+        requestJson();
       }
     },
     1,
     [loading, cameraMode]
   );
+
+  // Hooks for non-initial state changes
 
   // rotationXDegrees, rotationYDegrees, rotationZDegrees changed
   useEffect(() => {  
@@ -148,6 +162,30 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
       rotationZDegrees * (Math.PI / 180)
     ])
   }, [rotationEuler, rotationXDegrees, rotationYDegrees, rotationZDegrees]);
+
+  useEffect(() => {
+    setSceneJson(stringifyJson(
+      { 
+        annotations: annotations, 
+        scene: {
+          ambientLightIntensity: ambientLightIntensity,
+          environmentMap: environmentMap,
+          rotation: [rotationEuler.x, rotationEuler.y, rotationEuler.z]
+        }, 
+      }
+    ));
+  }, [
+    ambientLightIntensity,
+    annotations, 
+    environmentMap, 
+    rotationEuler, 
+    rotationXDegrees, 
+    rotationYDegrees, 
+    rotationZDegrees,
+    setSceneJson
+  ]);
+
+  // Event listeners
 
   const handleRecenterEvent = (e: any) => {
     recenter(e.detail);
@@ -160,6 +198,14 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
   };
 
   useEventListener(CAMERA_CONTROLS_ENABLED, handleCameraEnabledEvent);
+
+  const handleEmitJson = () => {
+    triggerJsonEmitEvent(sceneJson);
+  };
+
+  useEventListener(JSON_EMIT_REQUEST, handleEmitJson);
+
+  // Methods
 
   function zoomToObject(object: Object3D, instant?: boolean, padding: number | undefined = undefined) {
     if (!padding) {

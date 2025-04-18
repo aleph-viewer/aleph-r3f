@@ -6,6 +6,8 @@ export const CAMERA_UPDATE = 'alcameraupdate';
 export const DBL_CLICK = 'aldblclick';
 export const DRAGGING_MEASUREMENT = 'aldraggingmeasurement';
 export const DROPPED_MEASUREMENT = 'aldraggedmeasurement';
+export const JSON_EMIT = 'aljsonemit';
+export const JSON_EMIT_REQUEST = 'aljsonemitrequest';
 export const RECENTER = 'alrecenter';
 
 export type Event =
@@ -17,4 +19,6 @@ export type Event =
   | typeof DBL_CLICK
   | typeof DRAGGING_MEASUREMENT
   | typeof DROPPED_MEASUREMENT
+  | typeof JSON_EMIT
+  | typeof JSON_EMIT_REQUEST
   | typeof RECENTER;
