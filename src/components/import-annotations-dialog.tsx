@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import useStore from '@/Store';
 import { copyText, downloadJsonFile, parseAnnotations } from '@/lib/utils';
-import { createRef, useEffect, useState } from 'react';
+import { createRef, useState } from 'react';
 import { CSVLink } from 'react-csv';
 import { Tooltip } from './ui/tooltip';
 
