@@ -199,7 +199,7 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
 
   const handleEmitJsonRequest = () => {
     console.log('emitting json in response to event');
-    triggerJsonEmitEvent(sceneJson);
+    triggerJsonEmitEvent(JSON.parse(sceneJson));
   };
 
   useEventListener(JSON_EMIT_REQUEST, handleEmitJsonRequest);
