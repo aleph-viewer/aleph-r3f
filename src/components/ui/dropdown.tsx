@@ -15,9 +15,9 @@ const DropdownTrigger = React.forwardRef<
 
 const DropdownContent = React.forwardRef<
   React.ElementRef<typeof DropdownPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DropdownPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <DropdownPrimitive.Portal>
+  React.ComponentPropsWithoutRef<typeof DropdownPrimitive.Content> & { portalContainer?: HTMLElement }
+>(({ className, children, portalContainer, ...props }, ref) => (
+  <DropdownPrimitive.Portal container={portalContainer || document.body}>
     <DropdownPrimitive.Content 
       ref={ref} 
       className={cn('cursor-pointer text-white font-medium text-sm md:text-md p-2 bg-[#1f1f26] rounded-[0.5rem] w-[200px]', className)} 
