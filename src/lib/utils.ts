@@ -69,7 +69,6 @@ export const downloadJsonFile = (json: string) => {
 }
 
 export const parseAnnotations = (value: any) => {
-  console.log(value);
   value.map((anno: any) => {
     if (anno.position) {
       anno.position = new Vector3().fromArray(Object.values(anno.position));

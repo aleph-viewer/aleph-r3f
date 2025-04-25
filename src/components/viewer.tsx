@@ -198,7 +198,6 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
   useEventListener(CAMERA_CONTROLS_ENABLED, handleCameraEnabledEvent);
 
   const handleEmitJsonRequest = () => {
-    console.log('emitting json in response to event');
     triggerJsonEmitEvent(JSON.parse(sceneJson));
   };
 
