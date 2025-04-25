@@ -40,7 +40,7 @@ export function AnnotationToolbar() {
             </Tooltip>
             <Dropdown>
               <DropdownTrigger asChild>
-                  <button className="font-medium text-sm md:text-md line-clamp-1 p-1 whitespace-normal select-none">
+                  <button className="font-medium !text-sm md:text-md line-clamp-1 p-1 whitespace-normal select-none">
                     { selectedAnnotation !== null ? annotations[selectedAnnotation].label || `No Label` : 'Select Annotation' }
                   </button>
               </DropdownTrigger>
