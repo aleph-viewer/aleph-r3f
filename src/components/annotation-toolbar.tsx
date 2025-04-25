@@ -39,10 +39,10 @@ export function AnnotationToolbar() {
               </Button>
             </Tooltip>
             <Dropdown>
-              <DropdownTrigger>
-                <span className="font-medium text-sm md:text-md line-clamp-1 p-1 whitespace-normal">
-                  { selectedAnnotation !== null ? annotations[selectedAnnotation].label || `No Label` : 'Select Annotation' }
-                </span>
+              <DropdownTrigger asChild>
+                  <button className="font-medium text-sm md:text-md line-clamp-1 p-1 whitespace-normal select-none">
+                    { selectedAnnotation !== null ? annotations[selectedAnnotation].label || `No Label` : 'Select Annotation' }
+                  </button>
               </DropdownTrigger>
               <DropdownContent portalContainer={document.getElementById('annotation-toolbar') || document.body} side="top" style={{ zIndex: 999 }}>
                 { annotations.map((anno, idx) => 
@@ -57,7 +57,7 @@ export function AnnotationToolbar() {
                     }} 
                     key={idx} 
                     data-anno-idx={idx}
-                    className={selectedAnnotation === idx ? 'text-white' : 'text-gray-400'}
+                    className={`${selectedAnnotation === idx ? 'text-white' : 'text-gray-400'} select-none`}
                   >
                     { `${idx + 1}. ${anno.label || 'No Label'}` }
                   </DropdownItem>
