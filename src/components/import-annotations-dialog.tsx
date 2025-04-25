@@ -105,7 +105,7 @@ export function AnnotationsDialog() {
             </Label>
             <Textarea
               id="json"
-              className="font-mono"
+              className="!font-mono"
               ref={jsonRef}
               defaultValue={sceneJson}
               onChange={(value) => {
