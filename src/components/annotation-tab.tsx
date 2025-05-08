@@ -105,21 +105,6 @@ function AnnotationTab() {
     setAnnotations(updatedListItems);
   }
 
-  function deleteAnnotation(idx: number) {
-    const annotation = annotations[idx];
-    const message = annotation.label
-      ? `Are you sure you want to delete the annotation "${annotation.label}"?`
-      : 'Are you sure you want to delete this annotation?';
-
-    if (window.confirm(message)) {
-      setAnnotations(annotations.filter((_, i) => i !== idx));
-      setEditIdx(null);
-      if (selectedAnnotation === idx) {
-        setSelectedAnnotation(null);
-      }
-    }
-  }
-
   return (
     <Tab>
       <div className='flex flex-col justify-between grow'>
