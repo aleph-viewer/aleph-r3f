@@ -37,7 +37,7 @@ import { getBoundingSphere, normalizeSrc } from '@/lib/utils';
 
 function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
   const boundsRef = useRef<Group | null>(null);
-  const boundsLineRef = useRef<Group | null>(null);
+  const boundsLineRef = useRef<Object3D>(); // React.MutableRefObject<Object3D> | Falsey
   const boundsSphereRef = useRef<Sphere | null>(null);
   const rotationControlsRef = useRef<Group | null>(null);
 
@@ -120,7 +120,7 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
   useEventListener(RECENTER, handleRecenterEvent);
 
   const handleCameraEnabledEvent = (e: CustomEvent<boolean>) => {
-    (cameraRefs.controls.current as any).enabled = e.detail;
+    cameraRefs.controls.current!.enabled = e.detail;
   };
 
   useEventListener(CAMERA_CONTROLS_ENABLED, handleCameraEnabledEvent);
@@ -228,7 +228,7 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
   }
 
   function Bounds({ lineVisible, children }: { lineVisible?: boolean; children: React.ReactNode }) {
-    // @ts-ignore
+    // @ts-expect-error todo: get type correct for boundsLineRef
     useHelper(boundsLineRef, BoxHelper, 'white');
 
     // zoom to object on double click in scene mode
@@ -254,6 +254,7 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
             setSelectedAnnotation(null);
           }
         }}>
+        {/* @ts-expect-error todo: get type correct for boundsLineRef */}
         {lineVisible ? <group ref={boundsLineRef}>{children}</group> : children}
       </group>
     );
@@ -328,9 +329,9 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
           autoTransform={false}
           depthTest={false}
           disableAxes={true}
-          disableScaling={true}
+          // disableScaling={true}
           disableSliders={true}
-          enabled={sceneControlsEnabled && mode == 'scene'}
+          visible={sceneControlsEnabled && mode == 'scene'}
           fixed={true}
           matrix={rotationMatrixRef.current}
           onDrag={(local) => setRotationFromMatrix4(local)}
