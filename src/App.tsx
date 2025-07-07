@@ -4,7 +4,7 @@ import { useControls } from 'leva';
 import { normalizeSrc, ViewerRef, SrcObj, Viewer, ControlPanel } from '../index';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
-// @ts-ignore
+// @ts-expect-error import DOMPurify from 'dompurify';
 import DOMPurify from 'dompurify';
 import useStore from './Store';
 import { PresetsType } from '@react-three/drei/helpers/environment-assets';
@@ -13,12 +13,7 @@ function App() {
   const viewerRef = useRef<ViewerRef>(null);
   const loadedUrlsRef = useRef<string[]>([]);
 
-  const { 
-    cameraMode, 
-    environmentMap, 
-    setAmbientLightIntensity, 
-    setEnvironmentMap
-  } = useStore();
+  const { cameraMode, environmentMap, setAmbientLightIntensity, setEnvironmentMap } = useStore();
 
   // Configurable app data, includes list of models and scene/UI presets
   const config = {
@@ -75,20 +70,36 @@ function App() {
           scale: [1, 1, 1],
         },
       ] as SrcObj[],
-      'Stanford Bunny': 
-        'https://raw.githubusercontent.com/JulieWinchester/aleph-assets/main/bunny.glb',
-        // 'Frog (Draco) URL': 'https://aleph-gltf-models.netlify.app/Frog.glb',
+      'glxf demo': [
+        {
+          url: 'https://glxf-demo-assets.vercel.app/RedTable.glb',
+          label: 'Table',
+          position: [0, 0, 0],
+        },
+        {
+          url: 'https://glxf-demo-assets.vercel.app/IridescentDishWithOlives.glb',
+          label: 'IridescentDishWithOlives',
+          position: [0, 0, -0.2],
+        },
+        {
+          url: 'https://glxf-demo-assets.vercel.app/StainedGlassLamp.glb',
+          label: 'Lamp',
+          position: [0.2, 0, 0.4],
+        },
+      ] as SrcObj[],
+      'Stanford Bunny': 'https://raw.githubusercontent.com/JulieWinchester/aleph-assets/main/bunny.glb',
+      // 'Frog (Draco) URL': 'https://aleph-gltf-models.netlify.app/Frog.glb',
     },
     scene: {
       ambientLightIntensity: 0,
       environmentMap: 'apartment',
       rotation: [0, 0, 0], // Default rotation in radians
-    }
+    },
   };
 
   // https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/Models/Models-showcase.md
   // https://github.com/google/model-viewer/tree/master/packages/modelviewer.dev/assets
-  const [{ src }, _setLevaControls] = useControls(() => ({
+  const [{ src }] = useControls(() => ({
     src: {
       options: config.srcs,
     },
