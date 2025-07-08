@@ -324,24 +324,32 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
       <ambientLight intensity={ambientLightIntensity} />
 
       <Suspense fallback={<Loader />}>
-        <PivotControls
-          ref={rotationControlsRef}
-          autoTransform={false}
-          depthTest={false}
-          disableAxes={true}
-          // disableScaling={true}
-          disableSliders={true}
-          visible={sceneControlsEnabled && mode == 'scene'}
-          fixed={true}
-          matrix={rotationMatrixRef.current}
-          onDrag={(local) => setRotationFromMatrix4(local)}
-          scale={300}>
-          <Bounds lineVisible={boundsEnabled && mode == 'scene'}>
-            {srcs.map((src, index) => {
-              return <GLTF key={index} {...src} />;
-            })}
-          </Bounds>
-        </PivotControls>
+        {(() => {
+          const children = (
+            <Bounds lineVisible={boundsEnabled && mode == 'scene'}>
+              {srcs.map((src, index) => {
+                return <GLTF key={index} {...src} />;
+              })}
+            </Bounds>
+          );
+
+          return sceneControlsEnabled && mode == 'scene' ? (
+            <PivotControls
+              ref={rotationControlsRef}
+              autoTransform={false}
+              depthTest={false}
+              disableAxes={true}
+              disableSliders={true}
+              fixed={true}
+              matrix={rotationMatrixRef.current}
+              onDrag={(local) => setRotationFromMatrix4(local)}
+              scale={300}>
+              {children}
+            </PivotControls>
+          ) : (
+            children
+          );
+        })()}
       </Suspense>
       <Environment preset={envPreset} />
       {Tools[mode]}
