@@ -52,16 +52,16 @@ export const copyText = (text: string) => {
 };
 
 export const downloadJsonFile = (json: string) => {
-  const fileName = "aleph_annotations.json";
-  const data = new Blob([json], { type: "text/json" });
+  const fileName = 'aleph_annotations.json';
+  const data = new Blob([json], { type: 'text/json' });
   const jsonURL = window.URL.createObjectURL(data);
-  const link = document.createElement("a");
+  const link = document.createElement('a');
   document.body.appendChild(link);
   link.href = jsonURL;
-  link.setAttribute("download", fileName);
+  link.setAttribute('download', fileName);
   link.click();
   document.body.removeChild(link);
-}
+};
 
 export const parseAnnotations = (value: any) => {
   value.forEach((anno: any) => {
