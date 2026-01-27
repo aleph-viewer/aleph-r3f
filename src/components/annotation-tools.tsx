@@ -8,23 +8,25 @@ import React from 'react';
 import { Html } from '@react-three/drei';
 import { applyMatrix4Inverse, calculateScreenPosition, cn, getIntersects, getIntersectsPoints, isFacingCamera } from '@/lib/utils';
 import { useDrag } from '@use-gesture/react';
+// @ts-ignore
+import DOMPurify from 'dompurify';
 
-export function AnnotationTools({ 
-  cameraRefs, 
+export function AnnotationTools({
+  cameraRefs,
   boundsSphereRef,
-  rotationMatrixRef, 
-  viewOnly 
-}: { 
-  cameraRefs: CameraRefs, 
+  rotationMatrixRef,
+  viewOnly
+}: {
+  cameraRefs: CameraRefs,
   boundsSphereRef: React.MutableRefObject<Sphere | null>,
-  rotationMatrixRef: React.MutableRefObject<Matrix4>, 
-  viewOnly?: boolean 
+  rotationMatrixRef: React.MutableRefObject<Matrix4>,
+  viewOnly?: boolean
 }) {
-  const { 
-    annotations, 
-    setAnnotations, 
-    selectedAnnotation, 
-    setSelectedAnnotation 
+  const {
+    annotations,
+    setAnnotations,
+    selectedAnnotation,
+    setSelectedAnnotation
   } = useStore();
   const { scene, camera, pointer, raycaster, size } = useThree();
 
@@ -39,8 +41,8 @@ export function AnnotationTools({
       if (!anno.normal && boundsSphereRef.current) {
         // Use face intersecting vector from anno to scene center for normal
         // To account for annos inside models, cast from position beyond anno to center
-        intersects = getIntersectsPoints(scene, 
-          v1.subVectors(anno.position!, boundsSphereRef.current.center).multiplyScalar(1.1).add(boundsSphereRef.current.center), 
+        intersects = getIntersectsPoints(scene,
+          v1.subVectors(anno.position!, boundsSphereRef.current.center).multiplyScalar(1.1).add(boundsSphereRef.current.center),
           boundsSphereRef.current.center,
           raycaster
         );
@@ -60,7 +62,7 @@ export function AnnotationTools({
           // Use default camera position
           cameraRefs.controls.current!.getPosition(v1);
           anno.cameraPosition = applyMatrix4Inverse(v1, rotationMatrixRef.current);
-        }        
+        }
       }
 
       if (!anno.cameraTarget) {
@@ -199,7 +201,7 @@ export function AnnotationTools({
 
   function drawAnnotations() {
     let primaryAnnotation: Annotation | null = null;
-    let primaryIndex: number | null = null; 
+    let primaryIndex: number | null = null;
     const fragments = [];
 
     annotations.map((anno: Annotation, index: number) => {
@@ -275,7 +277,17 @@ export function AnnotationTools({
             <foreignObject width="200" height={anno.description ? 80 : 38} x="18">
               <div className="text">
                 <div className="label">{anno.label}</div>
-                {anno.description && <div className="description">{anno.description}</div>}
+                {anno.description && (
+                  <div
+                    className="description"
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(anno.description, {
+                        ALLOWED_TAGS: ['img', 'a', 'b', 'i', 'em', 'strong', 'p', 'br'],
+                        ALLOWED_ATTR: ['href', 'src', 'alt', 'target'],
+                      }),
+                    }}
+                  />
+                )}
               </div>
             </foreignObject>
           )}
