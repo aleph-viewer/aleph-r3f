@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Annotation, CameraMode, SrcCollections, SrcObj, Mode, ObjectMeasurement, ScreenMeasurement, MeasurementMode } from './types/';
+import { Annotation, CameraMode, InitialCameraConfig, SrcCollections, SrcObj, Mode, ObjectMeasurement, ScreenMeasurement, MeasurementMode } from './types/';
 import { Euler } from 'three';
 import { PresetsType } from '@react-three/drei/helpers/environment-assets';
 
@@ -27,6 +27,7 @@ type State = {
   screenMeasurements: ScreenMeasurement[];
   selectedAnnotation: number | null;
   sceneJson: string;
+  collectionCameraConfig: InitialCameraConfig | null | undefined;
   srcCollections: SrcCollections;
   srcCollectionSelected: number | null;
   srcs: SrcObj[];
@@ -51,6 +52,7 @@ type State = {
   setSceneJson: (sceneJson: string) => void;
   setScreenMeasurements: (measurements: ScreenMeasurement[]) => void;
   setSelectedAnnotation: (selectedAnnotation: number | null) => void;
+  setCollectionCameraConfig: (config: InitialCameraConfig | null | undefined) => void;
   setSrcCollections: (srcsCollections: SrcCollections) => void;
   setSrcCollectionSelected: (srcCollectionSelected: number | null) => void;
   setSrcs: (srcs: SrcObj[]) => void;
@@ -75,6 +77,7 @@ const useStore = create<State>((set) => ({
   rotationYDegrees: 0.0,
   rotationZDegrees: 0.0,
   rotationControlsEnabled: false,
+  collectionCameraConfig: undefined,
   sceneJson: '',
   screenMeasurements: [],
   selectedAnnotation: null,
@@ -196,6 +199,9 @@ const useStore = create<State>((set) => ({
     set({
       selectedAnnotation,
     }),
+
+  setCollectionCameraConfig: (collectionCameraConfig: InitialCameraConfig | null | undefined) =>
+    set({ collectionCameraConfig }),
 
   setSrcCollections: (srcCollections: SrcCollections) =>
     set({

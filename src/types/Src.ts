@@ -10,11 +10,14 @@ export type SrcObj = {
   requiredStatement?: string;
   url: string;
   annotations?: SrcAnnotation[];
+  type?: 'model' | 'canvas';
+  corners?: [[number, number, number], [number, number, number], [number, number, number], [number, number, number]];
 };
 
 export type SrcCollections = {
-  label: string,
-  src: Src,
+  label: string;
+  src: Src;
+  initialCameraConfig?: InitialCameraConfig;
 }[];
 
 // R3F types are easier to handle from a variety of input formats, e.g. with Src
@@ -24,6 +27,20 @@ export type SrcAnnotation = {
   position?: Vector3;
   cameraPosition?: Vector3;
   cameraTarget?: Vector3;
+  cameraFieldOfView?: number;
+  cameraNear?: number;
+  cameraFar?: number;
   description?: string;
   label?: string;
+};
+
+export type InitialCameraConfig = {
+  cameraType?: 'perspective' | 'orthographic';
+  position?: [number, number, number];
+  target?: [number, number, number];
+  fieldOfView?: number;
+  viewHeight?: number;
+  near?: number;
+  far?: number;
+  interactionMode?: string[];
 };

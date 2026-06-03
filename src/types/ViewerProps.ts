@@ -1,8 +1,10 @@
 import { PresetsType } from '@react-three/drei/helpers/environment-assets';
-import { Src, SrcCollections, SrcObj } from './index';
+import { InitialCameraConfig, Src, SrcCollections, SrcObj } from './index';
 
 type BaseViewerProps = {
+  backgroundColor?: string;
   environmentMap?: PresetsType;
+  initialCameraConfig?: InitialCameraConfig;
   measurementUnits?: 'm' | 'mm';
   onLoad?: (src: SrcObj[]) => void;
   rotationPreset?: [number, number, number];

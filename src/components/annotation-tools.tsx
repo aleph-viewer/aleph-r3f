@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import useStore from '@/Store';
-import { Intersection, Matrix4, Object3D, Sphere, Vector3 } from 'three';
+import { Intersection, Matrix4, Object3D, PerspectiveCamera, Sphere, Vector3 } from 'three';
 import { useEventListener, useEventTrigger } from '@/lib/hooks/use-event';
 import { ANNO_CLICK, Annotation, CAMERA_CONTROLS_ENABLED, CAMERA_LOADING_DONE, CameraRefs } from '@/types';
 import React from 'react';
@@ -94,7 +94,20 @@ export function AnnotationTools({
         v2.y,
         v2.z,
         true
-      )
+      );
+
+      if (annotation.cameraFieldOfView !== undefined && camera instanceof PerspectiveCamera) {
+        camera.fov = annotation.cameraFieldOfView;
+        camera.updateProjectionMatrix();
+      }
+      if (annotation.cameraNear !== undefined) {
+        camera.near = annotation.cameraNear;
+        camera.updateProjectionMatrix();
+      }
+      if (annotation.cameraFar !== undefined) {
+        camera.far = annotation.cameraFar;
+        camera.updateProjectionMatrix();
+      }
     }
   }
 
