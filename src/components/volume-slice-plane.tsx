@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from 'react';
-import { BufferGeometry, Data3DTexture, DoubleSide, Float32BufferAttribute, GLSL3, ShaderMaterial } from 'three';
+import { forwardRef, useEffect, useMemo } from 'react';
+import { BufferGeometry, Data3DTexture, DoubleSide, Float32BufferAttribute, GLSL3, Mesh, ShaderMaterial } from 'three';
 
 const vertexShader = `
   attribute vec3 texCoord;
@@ -53,14 +53,10 @@ type VolumeSlicePlaneProps = {
   windowWidth: number;
 };
 
-export const VolumeSlicePlane = ({
-  axis,
-  texture,
-  size,
-  slicePosition,
-  windowCenter,
-  windowWidth,
-}: VolumeSlicePlaneProps) => {
+export const VolumeSlicePlane = forwardRef<Mesh, VolumeSlicePlaneProps>(function VolumeSlicePlane(
+  { axis, texture, size, slicePosition, windowCenter, windowWidth },
+  ref
+) {
   const { widthDim, heightDim } = AXIS_DIMS[axis];
   const [sizeX, sizeY, sizeZ] = size;
 
@@ -118,5 +114,5 @@ export const VolumeSlicePlane = ({
 
   useEffect(() => () => material.dispose(), [material]);
 
-  return <mesh geometry={geometry} material={material} />;
-};
+  return <mesh ref={ref} geometry={geometry} material={material} />;
+});

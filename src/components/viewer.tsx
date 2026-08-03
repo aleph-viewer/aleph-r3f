@@ -1,7 +1,7 @@
 import '@/viewer.css';
 import '../index.css';
 import React, { RefObject, Suspense, forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { GLTF } from '@/components/gltf';
 import {
   CameraControls,
@@ -12,7 +12,6 @@ import {
   OrthographicCamera,
   PerspectiveCamera,
   PivotControls,
-  useHelper,
   useProgress,
 } from '@react-three/drei';
 import { BoxHelper, Group, Object3D, Vector3, Matrix4, Sphere, OrthographicCamera as ThreeOrthographicCamera } from 'three';
@@ -26,6 +25,8 @@ import {
   CameraRefs,
   DRAGGING_MEASUREMENT,
   DROPPED_MEASUREMENT,
+  DRAGGING_VOLUME_HANDLE,
+  DROPPED_VOLUME_HANDLE,
   RECENTER,
   CAMERA_CONTROLS_ENABLED,
   Src,
@@ -260,7 +261,7 @@ function Scene({ backgroundColor, environmentMap, initialCameraConfig, measureme
       padding = boundsSphereRef.current.radius * 0.2;
     }
 
-    cameraRefs.controls.current!.fitToBox(object, !instant, {
+    return cameraRefs.controls.current!.fitToBox(object, !instant, {
       cover: false,
       paddingLeft: padding,
       paddingRight: padding,
@@ -281,7 +282,15 @@ function Scene({ backgroundColor, environmentMap, initialCameraConfig, measureme
       if (!sphere) return;
 
       setCameraConfig();
-      zoomToObject(boundsRef.current, instant);
+
+      if (instant && srcs.some((src) => src.type === 'volume')) {
+        // initial custom view for volumes to get off the shoulder angle
+        const padded = new Sphere(sphere.center, sphere.radius * 1.2);
+        cameraRefs.controls.current?.fitToSphere(padded, !instant);
+        cameraRefs.controls.current?.rotateTo(Math.PI / 4, Math.PI / 4, !instant);
+      } else {
+        zoomToObject(boundsRef.current, instant);
+      }
     }
   }
 
@@ -293,9 +302,6 @@ function Scene({ backgroundColor, environmentMap, initialCameraConfig, measureme
       boundsSphereRef.current = sphere;
       const radius = sphere.radius;
 
-      // Imperative read so we always get the live camera, not the render-phase closure capture.
-      // Drei's makeDefault effect runs before Scene's effects, so R3F's store already holds the
-      // new camera type by the time this is called.
       const liveCamera = getThreeState().camera;
 
       if (orthographicEnabled) {
@@ -489,8 +495,27 @@ function Bounds({
   setSelectedAnnotation: (selectedAnnotation: number | null) => void;
   zoomToObject: (object: Object3D, instant?: boolean, padding?: number) => void;
 }) {
-  // @ts-ignore
-  useHelper(boundsLineRef, BoxHelper, 'white');
+  const boundsScene = useThree((state) => state.scene);
+  const boxHelperRef = useRef<BoxHelper | null>(null);
+
+  useEffect(() => {
+    if (!lineVisible || !boundsLineRef.current) return;
+    const helper = new BoxHelper(boundsLineRef.current, 'white');
+    helper.traverse((child) => {
+      child.raycast = () => null;
+    });
+    boundsScene.add(helper);
+    boxHelperRef.current = helper;
+    return () => {
+      boxHelperRef.current = null;
+      boundsScene.remove(helper);
+      helper.dispose();
+    };
+  }, [lineVisible, boundsScene, boundsLineRef]);
+
+  useFrame(() => {
+    boxHelperRef.current?.update();
+  });
 
   // zoom to object on double click in scene mode
   const handleDoubleClickEvent = (e: any) => {
@@ -633,6 +658,14 @@ const Viewer = (props: ViewerProps, ref: ((instance: unknown) => void) | RefObje
 
   useEventListener(DROPPED_MEASUREMENT, () => {
     // remove dragging class from body
+    document.body.classList.remove('dragging');
+  });
+
+  useEventListener(DRAGGING_VOLUME_HANDLE, () => {
+    document.body.classList.add('dragging');
+  });
+
+  useEventListener(DROPPED_VOLUME_HANDLE, () => {
     document.body.classList.remove('dragging');
   });
 

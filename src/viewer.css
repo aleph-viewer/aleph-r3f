@@ -133,3 +133,64 @@ body.dragging {
 #viewer {
   background: radial-gradient(circle, #42424d, #212126);
 }
+
+.volume-handle-anchor {
+  position: relative;
+}
+
+.volume-handle {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #f1eee7;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.5);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.volume-handle:hover {
+  transform: scale(1.25);
+}
+
+.volume-handle.dragging {
+  cursor: grabbing;
+  transform: scale(1.35);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.5), 0 0 8px 2px rgba(241, 238, 231, 0.5);
+}
+
+.volume-handle:focus-visible {
+  outline: 2px solid #f1eee7;
+  outline-offset: 3px;
+}
+
+.volume-handle-label {
+  position: absolute;
+  top: 50%;
+  left: 20px;
+  transform: translateY(-50%);
+  color: #ffffff;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+.volume-handle-readout {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  background: #0d0d10;
+  border: 1px solid rgba(241, 238, 231, 0.35);
+  color: #f1eee7;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  pointer-events: none;
+}

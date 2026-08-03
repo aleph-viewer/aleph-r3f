@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
-import { Data3DTexture } from 'three';
+import { MutableRefObject, useMemo, useRef } from 'react';
+import { Data3DTexture, Mesh } from 'three';
 import useStore from '@/Store';
 import { VolumeData } from '@/types/Volume';
 import { getVolumeSceneSize } from '@/lib/volume-utils';
 import { VolumeSlicePlane } from './volume-slice-plane';
+import { VolumeSliceHandles } from './volume-slice-handles';
 
 type VolumeSlicesProps = {
   volume: VolumeData;
@@ -24,10 +25,21 @@ export const VolumeSlices = ({ volume, texture }: VolumeSlicesProps) => {
 
   const size = useMemo(() => getVolumeSceneSize(volume), [volume]);
 
+  const xPlaneRef = useRef<Mesh>(null!);
+  const yPlaneRef = useRef<Mesh>(null!);
+  const zPlaneRef = useRef<Mesh>(null!);
+
+  const occludeRefs = [
+    volumeSliceXEnabled && xPlaneRef,
+    volumeSliceYEnabled && yPlaneRef,
+    volumeSliceZEnabled && zPlaneRef,
+  ].filter((ref): ref is MutableRefObject<Mesh> => !!ref);
+
   return (
     <group>
       {volumeSliceXEnabled && (
         <VolumeSlicePlane
+          ref={xPlaneRef}
           axis={0}
           texture={texture}
           size={size}
@@ -38,6 +50,7 @@ export const VolumeSlices = ({ volume, texture }: VolumeSlicesProps) => {
       )}
       {volumeSliceYEnabled && (
         <VolumeSlicePlane
+          ref={yPlaneRef}
           axis={1}
           texture={texture}
           size={size}
@@ -48,6 +61,7 @@ export const VolumeSlices = ({ volume, texture }: VolumeSlicesProps) => {
       )}
       {volumeSliceZEnabled && (
         <VolumeSlicePlane
+          ref={zPlaneRef}
           axis={2}
           texture={texture}
           size={size}
@@ -56,6 +70,7 @@ export const VolumeSlices = ({ volume, texture }: VolumeSlicesProps) => {
           windowWidth={volumeWindowWidth}
         />
       )}
+      <VolumeSliceHandles size={size} occludeRefs={occludeRefs} />
     </group>
   );
 };
