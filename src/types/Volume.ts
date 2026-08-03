@@ -1,3 +1,5 @@
+export type VolumeRenderMode = 'slices' | 'isosurface' | 'mip';
+
 export type VolumeData = {
   // [x (columns), y (rows), z (frames)]
   dimensions: [number, number, number];

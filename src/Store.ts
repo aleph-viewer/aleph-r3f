@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Annotation, CameraMode, InitialCameraConfig, SrcCollections, SrcObj, Mode, ObjectMeasurement, ScreenMeasurement, MeasurementMode } from './types/';
+import { Annotation, CameraMode, InitialCameraConfig, SrcCollections, SrcObj, Mode, ObjectMeasurement, ScreenMeasurement, MeasurementMode, VolumeRenderMode } from './types/';
 import { Euler } from 'three';
 import { PresetsType } from '@react-three/drei/helpers/environment-assets';
 
@@ -31,7 +31,7 @@ type State = {
   srcCollections: SrcCollections;
   srcCollectionSelected: number | null;
   srcs: SrcObj[];
-  volumeRenderMode: 'slices' | 'isosurface';
+  volumeRenderMode: VolumeRenderMode;
   volumeIsovalue: number;
   volumeSliceXEnabled: boolean;
   volumeSliceYEnabled: boolean;
@@ -66,7 +66,7 @@ type State = {
   setSrcCollections: (srcsCollections: SrcCollections) => void;
   setSrcCollectionSelected: (srcCollectionSelected: number | null) => void;
   setSrcs: (srcs: SrcObj[]) => void;
-  setVolumeRenderMode: (volumeRenderMode: 'slices' | 'isosurface') => void;
+  setVolumeRenderMode: (volumeRenderMode: VolumeRenderMode) => void;
   setVolumeIsovalue: (volumeIsovalue: number) => void;
   setVolumeSliceXEnabled: (volumeSliceXEnabled: boolean) => void;
   setVolumeSliceYEnabled: (volumeSliceYEnabled: boolean) => void;
@@ -249,7 +249,7 @@ const useStore = create<State>((set) => ({
       loading: true,
     }),
 
-  setVolumeRenderMode: (volumeRenderMode: 'slices' | 'isosurface') =>
+  setVolumeRenderMode: (volumeRenderMode: VolumeRenderMode) =>
     set({
       volumeRenderMode,
     }),

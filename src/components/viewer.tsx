@@ -641,7 +641,7 @@ const Viewer = (props: ViewerProps, ref: ((instance: unknown) => void) | RefObje
       <Canvas
         ref={canvasRef}
         camera={{ fov: 30 }}
-        frameloop={volumeRenderMode === 'isosurface' ? 'demand' : 'always'}
+        frameloop={volumeRenderMode === 'isosurface' || volumeRenderMode === 'mip' ? 'demand' : 'always'}
         onDoubleClick={(e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
           triggerDoubleClickEvent(e);
         }}>

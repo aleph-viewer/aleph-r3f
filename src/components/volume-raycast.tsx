@@ -24,6 +24,7 @@ const fragmentShader = `
   precision mediump sampler3D;
 
   uniform vec3 u_size;
+  uniform int u_renderstyle;
   uniform float u_renderthreshold;
   uniform vec2 u_clim;
   uniform sampler3D u_data;
@@ -38,6 +39,7 @@ const fragmentShader = `
   const float relative_step_size = 1.0;
   const float shininess = 40.0;
 
+  void cast_mip(vec3 start_loc, vec3 step, int nsteps, vec3 view_ray);
   void cast_iso(vec3 start_loc, vec3 step, int nsteps, vec3 view_ray);
   float sample1(vec3 texcoords);
   vec4 apply_colormap(float val);
@@ -60,7 +62,8 @@ const fragmentShader = `
     vec3 step = ((v_position - front) / u_size) / float(nsteps);
     vec3 start_loc = front / u_size;
 
-    cast_iso(start_loc, step, nsteps, view_ray);
+    if (u_renderstyle == 0) cast_mip(start_loc, step, nsteps, view_ray);
+    else cast_iso(start_loc, step, nsteps, view_ray);
 
     if (gl_FragColor.a < 0.05) discard;
   }
@@ -74,6 +77,31 @@ const fragmentShader = `
     float n = float(textureSize(u_cmdata, 0).x);
     val = (val * (n - 1.0) + 0.5) / n;
     return texture2D(u_cmdata, vec2(val, 0.5));
+  }
+
+  void cast_mip(vec3 start_loc, vec3 step, int nsteps, vec3 view_ray) {
+    float max_val = -1e6;
+    int max_i = 100;
+    vec3 loc = start_loc;
+
+    for (int iter = 0; iter < MAX_STEPS; iter++) {
+      if (iter >= nsteps) break;
+      float val = sample1(loc);
+      if (val > max_val) {
+        max_val = val;
+        max_i = iter;
+      }
+      loc += step;
+    }
+
+    vec3 iloc = start_loc + step * (float(max_i) - 0.5);
+    vec3 istep = step / float(REFINEMENT_STEPS);
+    for (int i = 0; i < REFINEMENT_STEPS; i++) {
+      max_val = max(max_val, sample1(iloc));
+      iloc += istep;
+    }
+
+    gl_FragColor = apply_colormap(max_val);
   }
 
   void cast_iso(vec3 start_loc, vec3 step, int nsteps, vec3 view_ray) {
@@ -165,14 +193,15 @@ const grayscaleColormap = (() => {
   return tex;
 })();
 
-type VolumeIsosurfaceProps = {
+type VolumeRaycastProps = {
   texture: Data3DTexture;
   dimensions: [number, number, number];
   voxelScale: [number, number, number];
-  isovalue: number; // 0-255, matching the rest of the app's pixel-value convention
+  renderStyle: 'mip' | 'iso';
+  isovalue: number; // 0-255, matching the rest of the app's pixel-value convention; ignored for mip
 };
 
-export const VolumeIsosurface = ({ texture, dimensions, voxelScale, isovalue }: VolumeIsosurfaceProps) => {
+export const VolumeRaycast = ({ texture, dimensions, voxelScale, renderStyle, isovalue }: VolumeRaycastProps) => {
   const invalidate = useThree((state) => state.invalidate);
   const [dimX, dimY, dimZ] = dimensions;
 
@@ -190,6 +219,7 @@ export const VolumeIsosurface = ({ texture, dimensions, voxelScale, isovalue }: 
       side: BackSide,
       uniforms: {
         u_size: { value: new Vector3(dimX, dimY, dimZ) },
+        u_renderstyle: { value: renderStyle === 'mip' ? 0 : 1 },
         u_renderthreshold: { value: isovalue / 255 },
         u_clim: { value: new Vector2(0, 1) },
         u_data: { value: texture },
@@ -198,16 +228,17 @@ export const VolumeIsosurface = ({ texture, dimensions, voxelScale, isovalue }: 
       vertexShader,
       fragmentShader,
     });
-    // isovalue is seeded here but kept live via the effect below
+    // renderStyle/isovalue are seeded here but kept live via the effect below
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [texture, dimX, dimY, dimZ]);
 
   useEffect(() => {
+    material.uniforms.u_renderstyle.value = renderStyle === 'mip' ? 0 : 1;
     material.uniforms.u_renderthreshold.value = isovalue / 255;
     // Uniform mutation bypasses R3F's prop-change tracking, so demand-mode frameloop (see
     // viewer.tsx) won't pick it up on its own.
     invalidate();
-  }, [material, isovalue, invalidate]);
+  }, [material, renderStyle, isovalue, invalidate]);
 
   useEffect(() => () => material.dispose(), [material]);
 

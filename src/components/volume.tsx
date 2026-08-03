@@ -7,7 +7,7 @@ import { useEventTrigger } from '@/lib/hooks/use-event';
 import { useDicomVolume } from '@/lib/hooks/use-dicom-volume';
 import { MM_TO_SCENE_UNITS } from '@/lib/volume-utils';
 import { VolumeSlices } from './volume-slices';
-import { VolumeIsosurface } from './volume-isosurface';
+import { VolumeRaycast } from './volume-raycast';
 
 type VolumeProps = SrcObj;
 
@@ -49,11 +49,12 @@ export const Volume = ({ url, position = [0, 0, 0], rotation = [0, 0, 0], scale 
 
   return (
     <group position={position} rotation={rotation} scale={scale}>
-      {volumeRenderMode === 'isosurface' ? (
-        <VolumeIsosurface
+      {volumeRenderMode === 'isosurface' || volumeRenderMode === 'mip' ? (
+        <VolumeRaycast
           texture={texture}
           dimensions={volume.dimensions}
           voxelScale={volume.spacing.map((s) => s * MM_TO_SCENE_UNITS) as [number, number, number]}
+          renderStyle={volumeRenderMode === 'mip' ? 'mip' : 'iso'}
           isovalue={volumeIsovalue}
         />
       ) : (
