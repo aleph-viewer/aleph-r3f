@@ -14,7 +14,9 @@ import { Check, Pencil, View } from 'lucide-react';
 import { AnnotationDeleteDialog } from './annotation-delete-dialog';
 
 function AnnotationTab() {
-  const { annotations, setAnnotations, selectedAnnotation, setSelectedAnnotation } = useStore();
+  const { annotations, setAnnotations, selectedAnnotation, setSelectedAnnotation, srcs, volumeRenderMode } = useStore();
+
+  const volumePlacementRestricted = srcs.some((src) => src.type === 'volume') && volumeRenderMode !== 'slices';
 
   const [editIdx, setEditIdx] = useState<number | null>(null);
   const [label, setLabel] = useState<string | undefined>();
@@ -81,10 +83,10 @@ function AnnotationTab() {
 
   function updateAnnotationCameraProps(idx: number) {
     const props = {
-      ...(cameraPositionRef.current !== undefined && { 
+      ...(cameraPositionRef.current !== undefined && {
         cameraPosition: applyMatrix4Inverse(cameraPositionRef.current, rotationMatrixRef.current)
       }),
-      ...(cameraTargetRef.current !== undefined && { 
+      ...(cameraTargetRef.current !== undefined && {
         cameraTarget: applyMatrix4Inverse(cameraTargetRef.current, rotationMatrixRef.current)
       })
     }
@@ -110,7 +112,13 @@ function AnnotationTab() {
       <div className='flex flex-col justify-between grow'>
         <div className='grid gap-y-4'>
           <div className="overflow-y-auto overflow-x-hidden">
-            <Instructions>Double-click to create annotations, drag to reorder.</Instructions>
+            {volumePlacementRestricted ? (
+              <Instructions>
+                For volumes, annotation placement isn't available in isosurface or MIP mode. Switch to Slices mode to place or move annotations. Existing annotations can still be edited or deleted.
+              </Instructions>
+            ) : (
+              <Instructions>Double-click to create annotations, drag to reorder.</Instructions>
+            )}
             {annotations.length ? (
               annotations.map((anno: Annotation, idx) => {
                 return (
@@ -207,9 +215,9 @@ function AnnotationTab() {
                   </div>
                 );
               })
-            ) : (
+            ) : !volumePlacementRestricted ? (
               <Instructions>Double-click to create an annotation.</Instructions>
-            )}
+            ) : null}
           </div>
         </div>
 

@@ -26,11 +26,16 @@ export function AnnotationTools({
     annotations,
     setAnnotations,
     selectedAnnotation,
-    setSelectedAnnotation
+    setSelectedAnnotation,
+    srcs,
+    volumeRenderMode
   } = useStore();
   const { scene, camera, pointer, raycaster, size } = useThree();
 
   const dragRef = useRef<number | null>(null);
+
+  // Annotation placement doesn't work for volume isosurface or MIP
+  const volumePlacementRestricted = srcs.some((src) => src.type === 'volume') && volumeRenderMode !== 'slices';
 
   const v1 = new Vector3();
   const v2 = new Vector3();
@@ -162,7 +167,7 @@ export function AnnotationTools({
   const triggerCameraControlsEnabledEvent = useEventTrigger(CAMERA_CONTROLS_ENABLED);
 
   const bind = useDrag((state) => {
-    if (viewOnly) return;
+    if (viewOnly || volumePlacementRestricted) return;
 
     const el = state.currentTarget as HTMLDivElement;
 
@@ -252,7 +257,7 @@ export function AnnotationTools({
           onMouseUp={(_e: React.MouseEvent<SVGElement>) => {
             if (isFacingCamera(anno.position!, anno.normal!, camera, rotationMatrixRef)) {
               // if was dragging this annotation
-              if (dragRef.current === index && !viewOnly) {
+              if (dragRef.current === index && !viewOnly && !volumePlacementRestricted) {
                 const intersects: Intersection<Object3D>[] = getIntersects(scene, camera, pointer, raycaster);
 
                 if (intersects.length > 0) {
@@ -324,7 +329,7 @@ export function AnnotationTools({
         width="100vw"
         height="100vh"
         onDoubleClick={(_e: React.MouseEvent<SVGElement>) => {
-          if (viewOnly) return;
+          if (viewOnly || volumePlacementRestricted) return;
 
           const intersects: Intersection<Object3D>[] = getIntersects(scene, camera, pointer, raycaster);
 
