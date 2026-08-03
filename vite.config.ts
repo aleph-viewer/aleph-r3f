@@ -7,6 +7,8 @@ import dts from 'vite-plugin-dts';
 const isVercel = process.env.VERCEL === '1';
 
 export default defineConfig({
+  // Relative base so worker/asset URLs resolve against the package's own files, not the consuming app's origin.
+  base: isVercel ? '/' : './',
   plugins: [react(), dts()],
   resolve: {
     alias: {
