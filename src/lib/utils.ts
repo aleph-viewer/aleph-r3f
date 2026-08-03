@@ -81,7 +81,7 @@ export const parseAnnotations = (value: any) => {
     if (anno.cameraPosition) {
       anno.cameraPosition = new Vector3().fromArray(Object.values(anno.cameraPosition));
     }
-    
+
     if (anno.cameraTarget) {
       anno.cameraTarget = new Vector3().fromArray(Object.values(anno.cameraTarget));
     }
@@ -101,11 +101,11 @@ export const parseAnnotations = (value: any) => {
 // Translate XYZ coordinates to 2D SVG screen position, projecting camera view
 // https://github.com/pmndrs/drei/blob/master/src/web/Html.tsx#L25
 export function calculateScreenPosition(
-  position: Vector3, 
-  rotationMatrixRef: React.MutableRefObject<Matrix4>, 
-  camera: Camera, 
+  position: Vector3,
+  rotationMatrixRef: React.MutableRefObject<Matrix4>,
+  camera: Camera,
   size: Size
-) { 
+) {
   const objectPos = v1.copy(position).applyMatrix4(rotationMatrixRef.current);
   objectPos.project(camera);
   const widthHalf = size.width / 2;
@@ -133,6 +133,21 @@ export function getIntersectsPoints(
   const direction = point2.clone().sub(point1).normalize();
   raycaster.set(point1, direction);
   return raycaster.intersectObjects(scene.children, true);
+}
+
+// Flips a raycast hit's face normal to always point back toward the ray origin.
+// Fixes issues where user places annotation on backface of polygon.
+export function getFacingNormal(intersection: Intersection, raycaster: Raycaster): Vector3 | undefined {
+  const normal = intersection.face?.normal;
+  if (!normal) return undefined;
+
+  const rayDirLocal = raycaster.ray.direction.clone().transformDirection(intersection.object.matrixWorld.clone().invert());
+
+  const facingNormal = normal.clone();
+  if (facingNormal.dot(rayDirLocal) > 0) {
+    facingNormal.negate();
+  }
+  return facingNormal;
 }
 
 // Does the vector face the camera?

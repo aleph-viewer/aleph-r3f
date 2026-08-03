@@ -6,7 +6,7 @@ import { useEventListener, useEventTrigger } from '@/lib/hooks/use-event';
 import { ANNO_CLICK, Annotation, CAMERA_CONTROLS_ENABLED, CAMERA_LOADING_DONE, CameraRefs } from '@/types';
 import React from 'react';
 import { Html } from '@react-three/drei';
-import { applyMatrix4Inverse, calculateScreenPosition, cn, getIntersects, getIntersectsPoints, isFacingCamera } from '@/lib/utils';
+import { applyMatrix4Inverse, calculateScreenPosition, cn, getFacingNormal, getIntersects, getIntersectsPoints, isFacingCamera } from '@/lib/utils';
 import { useDrag } from '@use-gesture/react';
 // @ts-ignore
 import DOMPurify from 'dompurify';
@@ -47,7 +47,7 @@ export function AnnotationTools({
           raycaster
         );
 
-        if (intersects.length > 0) anno.normal = intersects[0].face?.normal;
+        if (intersects.length > 0) anno.normal = getFacingNormal(intersects[0], raycaster);
       }
 
       if (!anno.cameraPosition) {
@@ -56,7 +56,7 @@ export function AnnotationTools({
           cameraRefs.controls.current!.getPosition(v1);
           const distance = v1.distanceTo(boundsSphereRef.current!.center);
 
-          v2.copy(intersects[0].face?.normal).normalize().multiplyScalar(distance).add(boundsSphereRef.current!.center);
+          v2.copy(anno.normal!).normalize().multiplyScalar(distance).add(boundsSphereRef.current!.center);
           anno.cameraPosition = applyMatrix4Inverse(v2, rotationMatrixRef.current);
         } else {
           // Use default camera position
@@ -263,7 +263,7 @@ export function AnnotationTools({
                         return {
                           ...anno,
                           position: applyMatrix4Inverse(intersects[0].point, rotationMatrixRef.current),
-                          normal: intersects[0].face?.normal,
+                          normal: getFacingNormal(intersects[0], raycaster),
                           cameraPosition: applyMatrix4Inverse(cameraRefs.position.current!, rotationMatrixRef.current),
                           cameraTarget: applyMatrix4Inverse(cameraRefs.target.current!, rotationMatrixRef.current),
                         };
@@ -333,7 +333,7 @@ export function AnnotationTools({
               ...annotations,
               {
                 position: applyMatrix4Inverse(intersects[0].point, rotationMatrixRef.current),
-                normal: intersects[0].face?.normal,
+                normal: getFacingNormal(intersects[0], raycaster),
                 cameraPosition: applyMatrix4Inverse(cameraRefs.position.current!, rotationMatrixRef.current),
                 cameraTarget: applyMatrix4Inverse(cameraRefs.target.current!, rotationMatrixRef.current),
               },
