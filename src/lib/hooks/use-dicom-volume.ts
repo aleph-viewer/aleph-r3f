@@ -93,11 +93,8 @@ export function useDicomVolume(url: string | undefined) {
     setProgress(0);
     setError(null);
 
-    // Capped below 1: the worker's last per-frame progress update and its final "done" message
-    // (which carries the actual data) are two separate postMessage calls, so progress can reach
-    // 1 here a tick before volume is set below. Consumers treat progress === 1 as "safe to use
-    // the volume now" (e.g. to recenter the camera), so that has to stay true only once volume
-    // itself is ready.
+    // Capped below 1: progress and "done" are separate postMessage calls, so this could hit 1 a
+    // tick before volume is actually set — consumers treat progress === 1 as "ready".
     const onProgress = (p: number) => {
       if (!cancelled) setProgress(Math.min(p, 0.999));
     };

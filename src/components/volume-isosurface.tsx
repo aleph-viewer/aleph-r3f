@@ -2,8 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useThree } from '@react-three/fiber';
 import { BackSide, BoxGeometry, Data3DTexture, DataTexture, RGBAFormat, ShaderMaterial, Vector2, Vector3 } from 'three';
 
-// Ported near-verbatim from three.js's own examples/jsm/shaders/VolumeShader.js
-// (VolumeRenderShader1) and examples/webgl_texture3d.html's geometry/uniform setup.
+// Ported near-verbatim from three.js's examples/jsm/shaders/VolumeShader.js (VolumeRenderShader1).
 const MAX_STEPS = 1400; // covers the worst-case ray diagonal through this volume's shape (up to ~1400 voxels)
 
 const vertexShader = `
@@ -152,8 +151,7 @@ const fragmentShader = `
   }
 `;
 
-// Grayscale ramp colormap, shared across every instance — the shader indexes into this rather
-// than shading intensity directly, matching the reference's colormap-driven design.
+// Grayscale ramp colormap, shared across every instance — intensity indexes into this rather than shading directly.
 const grayscaleColormap = (() => {
   const data = new Uint8Array(256 * 4);
   for (let i = 0; i < 256; i++) {
@@ -178,8 +176,7 @@ export const VolumeIsosurface = ({ texture, dimensions, voxelScale, isovalue }: 
   const invalidate = useThree((state) => state.invalidate);
   const [dimX, dimY, dimZ] = dimensions;
 
-  // Sized and translated directly in voxel-index space, not a unit cube scaled onto the mesh —
-  // the shader's ray math (main()/cast_iso()) expects v_position and u_size in that same space.
+  // Voxel-index space, not a unit cube — the shader's ray math expects v_position/u_size to match.
   const geometry = useMemo(() => {
     const geo = new BoxGeometry(dimX, dimY, dimZ);
     geo.translate(dimX / 2 - 0.5, dimY / 2 - 0.5, dimZ / 2 - 0.5);
@@ -214,5 +211,12 @@ export const VolumeIsosurface = ({ texture, dimensions, voxelScale, isovalue }: 
 
   useEffect(() => () => material.dispose(), [material]);
 
-  return <mesh geometry={geometry} material={material} scale={voxelScale} />;
+  // Recenters at the origin — the geometry itself sits corner-near-origin, per the ray math above.
+  const centerOffset: [number, number, number] = [
+    (-dimX / 2) * voxelScale[0],
+    (-dimY / 2) * voxelScale[1],
+    (-dimZ / 2) * voxelScale[2],
+  ];
+
+  return <mesh geometry={geometry} material={material} scale={voxelScale} position={centerOffset} />;
 };

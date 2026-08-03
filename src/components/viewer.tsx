@@ -468,8 +468,7 @@ function Scene({ backgroundColor, environmentMap, initialCameraConfig, measureme
   );
 }
 
-// Bounds, Loader, VolumeLoadWatcher, ProgressBar, and useVolumeLoadingProgress live at module
-// scope rather than nested inside Scene() to avoid unmounting and remounting the whole subtree
+// Module scope, not nested in Scene() — avoids remounting the whole subtree on unrelated re-renders.
 
 function Bounds({
   boundsRef,
@@ -545,10 +544,8 @@ function ProgressBar({ percent }: { percent: number }) {
   );
 }
 
-// Fed by a window CustomEvent rather than the zustand store, so updates only re-render whichever
-// component calls this hook. Resets synchronously during render (not in a useEffect, which would
-// leave the stale value in place for one commit) to 1 ("no volume pending") whenever srcs changes
-// and doesn't contain a volume, or 0 once it does.
+// Window CustomEvent, not the store, so updates only re-render the caller. Resets synchronously
+// during render (a useEffect would leave the stale value for one commit) when srcs changes.
 function useVolumeLoadingProgress(srcs: SrcObj[]): number {
   const hasVolumeSrc = srcs.some((s) => s.type === 'volume');
   const resetValue = hasVolumeSrc ? 0 : 1;
@@ -589,12 +586,9 @@ function Loader({ onLoad, srcs, setLoading, assetsLoadedRef }: LoadingProps) {
   return <ProgressBar percent={progress} />;
 }
 
-// Loader (above) is a Suspense fallback: it unmounts once nothing is suspended, which happens as
-// soon as GLTF/texture loading finishes — potentially before a slower volume decode, since volumes
-// never suspend. This is the handoff for that case: assetsLoadedRef records that Loader already
-// saw progress === 100 before it unmounted. Doesn't call useProgress() itself — from a
-// permanently-mounted component that triggers React's cross-component update-during-render
-// warning, since GLTF loaders touch the shared LoadingManager synchronously during render.
+// Handoff for when Loader unmounts (GLTF/texture done) before a slower volume decode finishes —
+// assetsLoadedRef records that. Doesn't call useProgress() itself: triggers a cross-component
+// update-during-render warning from a permanently-mounted component.
 function VolumeLoadWatcher({ onLoad, srcs, setLoading, loading, assetsLoadedRef }: LoadingProps & { loading: boolean }) {
   const volumeLoadingProgress = useVolumeLoadingProgress(srcs);
   const hasVolumeSrc = srcs.some((s) => s.type === 'volume');

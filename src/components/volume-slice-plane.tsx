@@ -22,9 +22,7 @@ const fragmentShader = `
   out vec4 fragColor;
 
   void main() {
-    // texture() on a normalized UnsignedByteType 3D texture returns [0,1], not the raw 0-255
-    // byte; windowCenter/windowWidth are expressed in raw pixel-value units (DICOM convention),
-    // so scale back up before applying them.
+    // texture() returns normalized [0,1]; windowCenter/windowWidth are raw 0-255 DICOM units.
     float intensity = texture(map, vTexCoord).r * 255.0;
     float low = windowCenter - windowWidth * 0.5;
     float windowed = clamp((intensity - low) / max(windowWidth, 0.0001), 0.0, 1.0);
@@ -32,9 +30,7 @@ const fragmentShader = `
   }
 `;
 
-// The two volume dimensions each axis plane spans, always in this (width, height) order. Both the
-// quad's vertex positions and its texture coordinates are built from this same mapping below, so
-// the plane can never sample a different location than where it's actually drawn.
+// Volume dimensions each axis plane spans; position and texCoord below share this same mapping.
 const AXIS_DIMS: { [key in 0 | 1 | 2]: { widthDim: 0 | 1 | 2; heightDim: 0 | 1 | 2 } } = {
   0: { widthDim: 1, heightDim: 2 }, // X fixed: spans Y, Z
   1: { widthDim: 0, heightDim: 2 }, // Y fixed: spans X, Z
