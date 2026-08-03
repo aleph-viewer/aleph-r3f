@@ -8,11 +8,15 @@ export function SliderSelector({
   description,
   value,
   onChange,
+  max = 1,
+  step = 0.1,
 }: {
   label: string;
   description: string;
   value: number;
   onChange: (value: number) => void;
+  max?: number;
+  step?: number;
 }) {
   const id: string = Math.random().toString(36).substring(2, 15); // Generate a unique ID
 
@@ -20,9 +24,9 @@ export function SliderSelector({
     <Selector label={label} description={description}>
       <Slider
         id={id}
-        max={1}
+        max={max}
         value={[value]}
-        step={0.1}
+        step={step}
         onValueChange={(value: number[]) => {
           onChange(value[0]);
         }}
