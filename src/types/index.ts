@@ -10,3 +10,4 @@ export * from './Point';
 export * from './ScreenMeasurement';
 export * from './Src';
 export * from './ViewerProps';
+export * from './Volume';

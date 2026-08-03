@@ -9,6 +9,7 @@ export const DROPPED_MEASUREMENT = 'aldraggedmeasurement';
 export const JSON_EMIT = 'aljsonemit';
 export const JSON_EMIT_REQUEST = 'aljsonemitrequest';
 export const RECENTER = 'alrecenter';
+export const VOLUME_LOADING_PROGRESS = 'alvolumeloadingprogress';
 
 export type Event =
   | typeof ANNO_CLICK
@@ -21,4 +22,5 @@ export type Event =
   | typeof DROPPED_MEASUREMENT
   | typeof JSON_EMIT
   | typeof JSON_EMIT_REQUEST
-  | typeof RECENTER;
+  | typeof RECENTER
+  | typeof VOLUME_LOADING_PROGRESS;

@@ -10,7 +10,7 @@ export type SrcObj = {
   requiredStatement?: string;
   url: string;
   annotations?: SrcAnnotation[];
-  type?: 'model' | 'canvas';
+  type?: 'model' | 'canvas' | 'volume';
   corners?: [[number, number, number], [number, number, number], [number, number, number], [number, number, number]];
 };
 
