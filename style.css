@@ -16,6 +16,10 @@ body {
   background-color: #212126;
 }
 
+.control-component {
+  background-color: #1f1f26;
+}
+
 #container {
   display: flex;
   height: 100%;
@@ -25,7 +29,6 @@ body {
 #control-panel {
   display: block; /* Default display */
   width: 20%;
-  background-color: #1f1f26;
 }
 
 #viewer {

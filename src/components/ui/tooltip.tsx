@@ -5,9 +5,10 @@ import * as TooltipPrimitives from "@radix-ui/react-tooltip";
 
 interface TooltipProps extends TooltipPrimitives.TooltipProps {
 	content: string,
+	side?: 'top' | 'right' | 'bottom' | 'left',
 }
 
-const Tooltip: React.FC<TooltipProps> = (({ children, ...props }) => {
+const Tooltip: React.FC<TooltipProps> = (({ children, side = 'top', ...props }) => {
 	const { content, ...otherProps } = props;
 
 	return (
@@ -18,8 +19,8 @@ const Tooltip: React.FC<TooltipProps> = (({ children, ...props }) => {
 				<TooltipPrimitives.Trigger asChild>
 					{children}
 				</TooltipPrimitives.Trigger>
-				<TooltipPrimitives.Content 
-					side="top" 
+				<TooltipPrimitives.Content
+					side={side}
 					align="center"
 					className="tooltip-content text-black"
 					{...props} 

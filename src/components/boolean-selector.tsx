@@ -20,8 +20,7 @@ export function BooleanSelector({
     <Selector 
       label={label} 
       description={description} 
-      inline={true} 
-      noPaddingTop={true}
+      inline={true}
     >
       <Switch
         checked={value}

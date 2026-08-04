@@ -1,12 +1,23 @@
 import { PresetsType } from '@react-three/drei/helpers/environment-assets';
-import { SrcObj } from './index';
+import { Src, SrcCollections, SrcObj } from './index';
 
-export type ViewerProps = {
-  envPreset: PresetsType;
+type BaseViewerProps = {
+  environmentMap?: PresetsType;
   onLoad?: (src: SrcObj[]) => void;
-  src: string | SrcObj | SrcObj[];
   rotationPreset?: [number, number, number];
 };
+
+type ViewerPropsWithSrc = BaseViewerProps & {
+  src: Src;
+  srcCollections?: never;
+};
+
+type ViewerPropsWithSrcCollections = BaseViewerProps & {
+  src?: never;
+  srcCollections: SrcCollections;
+};
+
+export type ViewerProps = ViewerPropsWithSrc | ViewerPropsWithSrcCollections;
 
 export type ViewerRef = {
   recenter: (instant?: boolean) => void;

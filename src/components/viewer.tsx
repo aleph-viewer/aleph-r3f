@@ -19,7 +19,6 @@ import { BoxHelper, Group, Object3D, Vector3, Matrix4, Sphere } from 'three';
 import useStore from '@/Store';
 import {
   ViewerProps as ViewerProps,
-  SrcObj,
   CAMERA_UPDATE,
   DBL_CLICK,
   Mode,
@@ -28,14 +27,18 @@ import {
   DROPPED_MEASUREMENT,
   RECENTER,
   CAMERA_CONTROLS_ENABLED,
+  Src,
+  Annotation,
 } from '@/types';
 import { useEventListener, useEventTrigger } from '@/lib/hooks/use-event';
 import useTimeout from '@/lib/hooks/use-timeout';
 import { AnnotationTools } from './annotation-tools';
 import MeasurementTools from './measurement-tools';
-import { getBoundingSphere, normalizeSrc } from '@/lib/utils';
+import { getBoundingSphere, normalizeSrc, parseAnnotations } from '@/lib/utils';
+import { ControlToolbar } from './control-toolbar';
+import { AnnotationToolbar } from './annotation-toolbar';
 
-function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
+function Scene({ environmentMap, onLoad, src, srcCollections, rotationPreset }: ViewerProps) {
   const boundsRef = useRef<Group | null>(null);
   const boundsLineRef = useRef<Group | null>(null);
   const boundsSphereRef = useRef<Sphere | null>(null);
@@ -64,7 +67,7 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
     rotationXDegrees,
     rotationYDegrees,
     rotationZDegrees,
-    sceneControlsEnabled,
+    rotationControlsEnabled,
     setAnnotations,
     setLoading,
     setRotationEuler,
@@ -72,6 +75,8 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
     setRotationYDegrees,
     setRotationZDegrees,
     setSelectedAnnotation,
+    setSrcCollections,
+    setSrcCollectionSelected,
     setSrcs,
     srcs,
   } = useStore();
@@ -82,12 +87,32 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
 
   const triggerCameraUpdateEvent = useEventTrigger(CAMERA_UPDATE);
 
-  // src changed
+  // src or srcCollections changed
   useEffect(() => {
-    const srcs: SrcObj[] = normalizeSrc(src);
-    setSrcs(srcs);
-    setAnnotations([]);
-  }, [src]);
+    if (srcs.length === 0) {
+      let newSrc: Src | undefined = undefined;
+      if (src) {
+        newSrc = src;
+      } else if (srcCollections && srcCollections.length) {
+        newSrc = srcCollections[0].src;
+        setSrcCollectionSelected(0);
+        setSrcCollections(srcCollections);
+      }
+
+      if (newSrc) {
+        const normalizedSrc = normalizeSrc(newSrc);
+        const srcAnnotations = parseAnnotations(normalizedSrc.reduce(
+          (acc: Annotation[], src) => { return acc.concat(src.annotations || []) }, 
+          []
+        ));
+        setSrcs(normalizedSrc);
+        setAnnotations(srcAnnotations && srcAnnotations.length ? srcAnnotations : []); 
+        // Camera will be recentered when loading is complete
+      }
+    } else {
+      recenter(true);
+    }
+  }, [srcs]);
 
   // rotationXDegrees, rotationYDegrees, rotationZDegrees changed
   useEffect(() => {  
@@ -311,7 +336,7 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
   const Tools: { [key in Mode]: React.ReactElement } = {
     annotation: <AnnotationTools cameraRefs={cameraRefs} rotationMatrixRef={rotationMatrixRef} />,
     measurement: <MeasurementTools rotationMatrixRef={rotationMatrixRef} />,
-    scene: <></>,
+    scene: <AnnotationTools cameraRefs={cameraRefs} rotationMatrixRef={rotationMatrixRef} viewOnly={true} />,
   };
 
   return (
@@ -328,7 +353,7 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
           disableAxes={true} 
           disableScaling={true} 
           disableSliders={true} 
-          enabled={sceneControlsEnabled && mode == 'scene'}
+          enabled={rotationControlsEnabled && mode == 'scene'}
           fixed={true}
           matrix={rotationMatrixRef.current}
           onDrag={(local) => setRotationFromMatrix4(local)}
@@ -341,7 +366,7 @@ function Scene({ envPreset, onLoad, src, rotationPreset }: ViewerProps) {
           </Bounds>
         </PivotControls>
       </Suspense>
-      <Environment preset={envPreset} />
+      <Environment preset={environmentMap} />
       {Tools[mode]}
       { (gridEnabled && mode == 'scene') && <gridHelper args={getGridProperties()} />}
       { (axesEnabled && mode == 'scene') && 
@@ -376,7 +401,7 @@ const Viewer = (props: ViewerProps, ref: ((instance: unknown) => void) | RefObje
   });
 
   return (
-    <>
+    <div className="w-full h-full relative">
       <Canvas
         ref={canvasRef}
         camera={{ fov: 30 }}
@@ -385,7 +410,9 @@ const Viewer = (props: ViewerProps, ref: ((instance: unknown) => void) | RefObje
         }}>
         <Scene {...props} />
       </Canvas>
-    </>
+      <AnnotationToolbar />
+      <ControlToolbar />
+    </div>
   );
 };
 

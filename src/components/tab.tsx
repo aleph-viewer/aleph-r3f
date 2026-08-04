@@ -1,4 +1,3 @@
-import { DisplayControls } from "./display-controls";
 import { TabSection } from "./tab-section";
 
 export function Tab({ children }: { children: React.ReactNode }) {
@@ -8,7 +7,6 @@ export function Tab({ children }: { children: React.ReactNode }) {
         <TabSection className='grow'>
           {children}
         </TabSection>
-        <DisplayControls />
       </div>
     </div>
   );
