@@ -96,6 +96,10 @@ function App() {
         src: 'https://raw.githubusercontent.com/JulieWinchester/aleph-assets/main/bunny.glb',
       },
       {
+        label: 'CT Fish Scan',
+        src: { url: 'https://raw.githubusercontent.com/JulieWinchester/aleph-assets/main/fish.dcm', type: 'volume' } as SrcObj,
+      },
+      {
         label: 'Astronaut Annotated',
         src: {
           url: 'https://raw.githubusercontent.com/IIIF/3d/main/assets/astronaut/astronaut.glb',
