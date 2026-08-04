@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Annotation, CameraMode, InitialCameraConfig, SrcCollections, SrcObj, Mode, ObjectMeasurement, ScreenMeasurement, MeasurementMode } from './types/';
+import { Annotation, CameraMode, InitialCameraConfig, SrcCollections, SrcObj, Mode, ObjectMeasurement, ScreenMeasurement, MeasurementMode, VolumeRenderMode } from './types/';
 import { Euler } from 'three';
 import { PresetsType } from '@react-three/drei/helpers/environment-assets';
 
@@ -31,6 +31,16 @@ type State = {
   srcCollections: SrcCollections;
   srcCollectionSelected: number | null;
   srcs: SrcObj[];
+  volumeRenderMode: VolumeRenderMode;
+  volumeIsovalue: number;
+  volumeSliceXEnabled: boolean;
+  volumeSliceYEnabled: boolean;
+  volumeSliceZEnabled: boolean;
+  volumeSliceXPosition: number;
+  volumeSliceYPosition: number;
+  volumeSliceZPosition: number;
+  volumeWindowCenter: number;
+  volumeWindowWidth: number;
   setAmbientLightIntensity: (ambientLightIntensity: number) => void;
   setAnnotations: (annotations: Annotation[]) => void;
   setAxesEnabled: (axesEnabled: boolean) => void;
@@ -56,6 +66,16 @@ type State = {
   setSrcCollections: (srcsCollections: SrcCollections) => void;
   setSrcCollectionSelected: (srcCollectionSelected: number | null) => void;
   setSrcs: (srcs: SrcObj[]) => void;
+  setVolumeRenderMode: (volumeRenderMode: VolumeRenderMode) => void;
+  setVolumeIsovalue: (volumeIsovalue: number) => void;
+  setVolumeSliceXEnabled: (volumeSliceXEnabled: boolean) => void;
+  setVolumeSliceYEnabled: (volumeSliceYEnabled: boolean) => void;
+  setVolumeSliceZEnabled: (volumeSliceZEnabled: boolean) => void;
+  setVolumeSliceXPosition: (volumeSliceXPosition: number) => void;
+  setVolumeSliceYPosition: (volumeSliceYPosition: number) => void;
+  setVolumeSliceZPosition: (volumeSliceZPosition: number) => void;
+  setVolumeWindowCenter: (volumeWindowCenter: number) => void;
+  setVolumeWindowWidth: (volumeWindowWidth: number) => void;
 };
 
 const useStore = create<State>((set) => ({
@@ -84,7 +104,17 @@ const useStore = create<State>((set) => ({
   srcCollections: [],
   srcCollectionSelected: null,
   srcs: [],
-  
+  volumeRenderMode: 'slices',
+  volumeIsovalue: 50,
+  volumeSliceXEnabled: true,
+  volumeSliceYEnabled: true,
+  volumeSliceZEnabled: true,
+  volumeSliceXPosition: 0.5,
+  volumeSliceYPosition: 0.5,
+  volumeSliceZPosition: 0.5,
+  volumeWindowCenter: 127.5,
+  volumeWindowWidth: 255,
+
   setAmbientLightIntensity: (ambientLightIntensity: number) =>
     set({
       ambientLightIntensity,
@@ -217,6 +247,56 @@ const useStore = create<State>((set) => ({
     set({
       srcs,
       loading: true,
+    }),
+
+  setVolumeRenderMode: (volumeRenderMode: VolumeRenderMode) =>
+    set({
+      volumeRenderMode,
+    }),
+
+  setVolumeIsovalue: (volumeIsovalue: number) =>
+    set({
+      volumeIsovalue,
+    }),
+
+  setVolumeSliceXEnabled: (volumeSliceXEnabled: boolean) =>
+    set({
+      volumeSliceXEnabled,
+    }),
+
+  setVolumeSliceYEnabled: (volumeSliceYEnabled: boolean) =>
+    set({
+      volumeSliceYEnabled,
+    }),
+
+  setVolumeSliceZEnabled: (volumeSliceZEnabled: boolean) =>
+    set({
+      volumeSliceZEnabled,
+    }),
+
+  setVolumeSliceXPosition: (volumeSliceXPosition: number) =>
+    set({
+      volumeSliceXPosition,
+    }),
+
+  setVolumeSliceYPosition: (volumeSliceYPosition: number) =>
+    set({
+      volumeSliceYPosition,
+    }),
+
+  setVolumeSliceZPosition: (volumeSliceZPosition: number) =>
+    set({
+      volumeSliceZPosition,
+    }),
+
+  setVolumeWindowCenter: (volumeWindowCenter: number) =>
+    set({
+      volumeWindowCenter,
+    }),
+
+  setVolumeWindowWidth: (volumeWindowWidth: number) =>
+    set({
+      volumeWindowWidth,
     }),
 }));
 

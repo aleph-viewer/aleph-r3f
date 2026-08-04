@@ -381,6 +381,7 @@ export function ScreenMeasurementTools() {
 
     return (
       <Html
+        zIndexRange={[50, 0]}
         calculatePosition={() => {
           return [0, 0];
         }}

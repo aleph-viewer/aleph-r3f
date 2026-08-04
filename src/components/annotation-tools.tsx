@@ -6,7 +6,7 @@ import { useEventListener, useEventTrigger } from '@/lib/hooks/use-event';
 import { ANNO_CLICK, Annotation, CAMERA_CONTROLS_ENABLED, CAMERA_LOADING_DONE, CameraRefs } from '@/types';
 import React from 'react';
 import { Html } from '@react-three/drei';
-import { applyMatrix4Inverse, calculateScreenPosition, cn, getIntersects, getIntersectsPoints, isFacingCamera } from '@/lib/utils';
+import { applyMatrix4Inverse, calculateScreenPosition, cn, getFacingNormal, getIntersects, getIntersectsPoints, isFacingCamera } from '@/lib/utils';
 import { useDrag } from '@use-gesture/react';
 // @ts-ignore
 import DOMPurify from 'dompurify';
@@ -26,11 +26,16 @@ export function AnnotationTools({
     annotations,
     setAnnotations,
     selectedAnnotation,
-    setSelectedAnnotation
+    setSelectedAnnotation,
+    srcs,
+    volumeRenderMode
   } = useStore();
   const { scene, camera, pointer, raycaster, size } = useThree();
 
   const dragRef = useRef<number | null>(null);
+
+  // Annotation placement doesn't work for volume isosurface or MIP
+  const volumePlacementRestricted = srcs.some((src) => src.type === 'volume') && volumeRenderMode !== 'slices';
 
   const v1 = new Vector3();
   const v2 = new Vector3();
@@ -47,7 +52,7 @@ export function AnnotationTools({
           raycaster
         );
 
-        if (intersects.length > 0) anno.normal = intersects[0].face?.normal;
+        if (intersects.length > 0) anno.normal = getFacingNormal(intersects[0], raycaster);
       }
 
       if (!anno.cameraPosition) {
@@ -56,7 +61,7 @@ export function AnnotationTools({
           cameraRefs.controls.current!.getPosition(v1);
           const distance = v1.distanceTo(boundsSphereRef.current!.center);
 
-          v2.copy(intersects[0].face?.normal).normalize().multiplyScalar(distance).add(boundsSphereRef.current!.center);
+          v2.copy(anno.normal!).normalize().multiplyScalar(distance).add(boundsSphereRef.current!.center);
           anno.cameraPosition = applyMatrix4Inverse(v2, rotationMatrixRef.current);
         } else {
           // Use default camera position
@@ -162,7 +167,7 @@ export function AnnotationTools({
   const triggerCameraControlsEnabledEvent = useEventTrigger(CAMERA_CONTROLS_ENABLED);
 
   const bind = useDrag((state) => {
-    if (viewOnly) return;
+    if (viewOnly || volumePlacementRestricted) return;
 
     const el = state.currentTarget as HTMLDivElement;
 
@@ -252,7 +257,7 @@ export function AnnotationTools({
           onMouseUp={(_e: React.MouseEvent<SVGElement>) => {
             if (isFacingCamera(anno.position!, anno.normal!, camera, rotationMatrixRef)) {
               // if was dragging this annotation
-              if (dragRef.current === index && !viewOnly) {
+              if (dragRef.current === index && !viewOnly && !volumePlacementRestricted) {
                 const intersects: Intersection<Object3D>[] = getIntersects(scene, camera, pointer, raycaster);
 
                 if (intersects.length > 0) {
@@ -263,7 +268,7 @@ export function AnnotationTools({
                         return {
                           ...anno,
                           position: applyMatrix4Inverse(intersects[0].point, rotationMatrixRef.current),
-                          normal: intersects[0].face?.normal,
+                          normal: getFacingNormal(intersects[0], raycaster),
                           cameraPosition: applyMatrix4Inverse(cameraRefs.position.current!, rotationMatrixRef.current),
                           cameraTarget: applyMatrix4Inverse(cameraRefs.target.current!, rotationMatrixRef.current),
                         };
@@ -324,7 +329,7 @@ export function AnnotationTools({
         width="100vw"
         height="100vh"
         onDoubleClick={(_e: React.MouseEvent<SVGElement>) => {
-          if (viewOnly) return;
+          if (viewOnly || volumePlacementRestricted) return;
 
           const intersects: Intersection<Object3D>[] = getIntersects(scene, camera, pointer, raycaster);
 
@@ -333,7 +338,7 @@ export function AnnotationTools({
               ...annotations,
               {
                 position: applyMatrix4Inverse(intersects[0].point, rotationMatrixRef.current),
-                normal: intersects[0].face?.normal,
+                normal: getFacingNormal(intersects[0], raycaster),
                 cameraPosition: applyMatrix4Inverse(cameraRefs.position.current!, rotationMatrixRef.current),
                 cameraTarget: applyMatrix4Inverse(cameraRefs.target.current!, rotationMatrixRef.current),
               },
