@@ -15,6 +15,8 @@ export function SourceSelector() {
     setCameraMode,
     setCollectionCameraConfig,
     setGridEnabled,
+    setObjectMeasurements,
+    setScreenMeasurements,
     setSrcs,
     setSrcCollectionSelected
   } = useStore();
@@ -35,12 +37,16 @@ export function SourceSelector() {
 
     const normalizedSrc = normalizeSrc(srcCollections[idx].src);
     const srcAnnotations = parseAnnotations(normalizedSrc.reduce(
-      (acc: SrcAnnotation[], src) => { return acc.concat(src.annotations || []) }, 
+      (acc: SrcAnnotation[], src) => { return acc.concat(src.annotations || []) },
       []
     ));
     setSrcs(normalizedSrc);
-    setAnnotations(srcAnnotations && srcAnnotations.length ? srcAnnotations : []); 
+    setAnnotations(srcAnnotations && srcAnnotations.length ? srcAnnotations : []);
 
+    // Measurements are session-generated, not tied to a src, so they don't get replaced by
+    // switching sources the way annotations do above — clear them explicitly instead.
+    setObjectMeasurements([]);
+    setScreenMeasurements([]);
   };
 
   return (
