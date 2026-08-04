@@ -9,7 +9,7 @@ const Toolbar = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <ToolbarPrimitive.Root
     ref={ref}
-    className={cn('p-3 text-white control-component', className)}
+    className={cn('p-2 text-white control-component', className)}
     {...props}
   />
 ));

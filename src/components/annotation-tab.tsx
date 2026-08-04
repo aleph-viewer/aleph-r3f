@@ -10,7 +10,8 @@ import { Tab } from './tab';
 import { applyMatrix4Inverse, cn } from '@/lib/utils';
 import { Instructions } from './instructions';
 import { AnnotationsDialog } from './import-annotations-dialog';
-import { Check, Pencil, View, X } from 'lucide-react';
+import { Check, Pencil, View } from 'lucide-react';
+import { AnnotationDeleteDialog } from './annotation-delete-dialog';
 
 function AnnotationTab() {
   const { annotations, setAnnotations, selectedAnnotation, setSelectedAnnotation } = useStore();
@@ -102,21 +103,6 @@ function AnnotationTab() {
       ...copyListItems.slice((idx as number) + 1),
     ];
     setAnnotations(updatedListItems);
-  }
-
-  function deleteAnnotation(idx: number) {
-    const annotation = annotations[idx];
-    const message = annotation.label
-      ? `Are you sure you want to delete the annotation "${annotation.label}"?`
-      : 'Are you sure you want to delete this annotation?';
-
-    if (window.confirm(message)) {
-      setAnnotations(annotations.filter((_, i) => i !== idx));
-      setEditIdx(null);
-      if (selectedAnnotation === idx) {
-        setSelectedAnnotation(null);
-      }
-    }
   }
 
   return (
@@ -214,16 +200,7 @@ function AnnotationTab() {
                             </Button>
                           </Tooltip>
                           {/* delete button */}
-                          <Tooltip content="Delete Annotation">
-                            <Button
-                              className="p-2 h-8"
-                              variant="destructive"
-                              onClick={() => {
-                                deleteAnnotation(idx);
-                              }}>
-                              <X size="16" />
-                            </Button>
-                          </Tooltip>
+                          <AnnotationDeleteDialog annoIdx={idx} onClick={() => setEditIdx(null)} />
                         </div>
                       </>
                     )}

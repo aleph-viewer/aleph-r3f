@@ -33,7 +33,7 @@ export function ControlToolbar() {
   }
 
   return (
-      <div className="absolute top-5 right-5" style={{ zIndex: 999 }}> 
+      <div id="scene-toolbar" className="absolute top-5 right-5" style={{ zIndex: 51 }}> 
         <Toolbar orientation="vertical" className="control-component" style={{ borderRadius: '0.5rem' }}>
           <ToggleGroup
             className="grid gap-1"

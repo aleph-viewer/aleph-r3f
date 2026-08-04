@@ -23,7 +23,7 @@ export const GLTF = ({ url, position = [0, 0, 0], rotation = [0, 0, 0], scale = 
     <>
       {/* @ts-ignore: https://github.com/pmndrs/react-spring/issues/1515 */}
       <group ref={ref} position={position} rotation={rotation} scale={scale}>
-        <Clone object={scene} scale={scale} />
+        <Clone object={scene} />
       </group>
     </>
   );

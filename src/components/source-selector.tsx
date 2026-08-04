@@ -3,31 +3,39 @@
 import useStore from '@/Store';
 import { OptionSelector } from './option-selector';
 import { normalizeSrc, parseAnnotations } from '@/lib/utils';
-import { Annotation } from '@/types';
+import { SrcAnnotation } from '@/types';
 
 export function SourceSelector() {
-  const { 
-    srcCollections, 
-    srcCollectionSelected, 
+  const {
+    srcCollections,
+    srcCollectionSelected,
     setAnnotations,
     setAxesEnabled,
     setBoundsEnabled,
+    setCameraMode,
+    setCollectionCameraConfig,
     setGridEnabled,
-    setSrcs, 
-    setSrcCollectionSelected 
+    setSrcs,
+    setSrcCollectionSelected
   } = useStore();
- 
+
   const handleChange = (value: string) => {
-    setSrcCollectionSelected(parseInt(value));
+    const idx = parseInt(value);
+    setSrcCollectionSelected(idx);
 
     // Disable axes, bounds, and grid
     setAxesEnabled(false);
     setBoundsEnabled(false);
     setGridEnabled(false);
 
-    const normalizedSrc = normalizeSrc(srcCollections[parseInt(value)].src);
+    // Apply per-collection camera config if present
+    const camConfig = srcCollections[idx].initialCameraConfig ?? null;
+    setCollectionCameraConfig(camConfig);
+    setCameraMode(camConfig?.cameraType === 'orthographic' ? 'orthographic' : 'perspective');
+
+    const normalizedSrc = normalizeSrc(srcCollections[idx].src);
     const srcAnnotations = parseAnnotations(normalizedSrc.reduce(
-      (acc: Annotation[], src) => { return acc.concat(src.annotations || []) }, 
+      (acc: SrcAnnotation[], src) => { return acc.concat(src.annotations || []) }, 
       []
     ));
     setSrcs(normalizedSrc);

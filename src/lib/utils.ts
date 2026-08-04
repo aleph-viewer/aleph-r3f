@@ -69,11 +69,30 @@ export const downloadJsonFile = (json: string) => {
 }
 
 export const parseAnnotations = (value: any) => {
-  value.forEach((anno: any) => {
-    anno.cameraPosition = new Vector3().fromArray(Object.values(anno.cameraPosition));
-    anno.cameraTarget = new Vector3().fromArray(Object.values(anno.cameraTarget));
-    anno.normal = new Vector3().fromArray(Object.values(anno.normal));
-    anno.position = new Vector3().fromArray(Object.values(anno.position));
+  value.map((anno: any) => {
+    if (anno.position) {
+      anno.position = new Vector3().fromArray(Object.values(anno.position));
+    }
+
+    if (anno.normal) {
+      anno.normal = new Vector3().fromArray(Object.values(anno.normal));
+    }
+
+    if (anno.cameraPosition) {
+      anno.cameraPosition = new Vector3().fromArray(Object.values(anno.cameraPosition));
+    }
+    
+    if (anno.cameraTarget) {
+      anno.cameraTarget = new Vector3().fromArray(Object.values(anno.cameraTarget));
+    }
+
+    return anno;
+  }).filter((anno: any) => {
+    // Remove any annotations that don't have a position
+    if (!anno.position) {
+      console.warn("Annotation without position:", anno);
+      return false;
+    }
   });
 
   return value;
@@ -105,6 +124,17 @@ export function getIntersects(
   return raycaster.intersectObjects(scene.children, true);
 }
 
+export function getIntersectsPoints(
+  scene: Scene,
+  point1: Vector3,
+  point2: Vector3,
+  raycaster: Raycaster
+): Intersection<Object3D<Object3DEventMap>>[] {
+  const direction = point2.clone().sub(point1).normalize();
+  raycaster.set(point1, direction);
+  return raycaster.intersectObjects(scene.children, true);
+}
+
 // Does the vector face the camera?
 export function isFacingCamera(
   position: Vector3,
@@ -112,6 +142,8 @@ export function isFacingCamera(
   camera: Camera,
   rotationMatrixRef: React.MutableRefObject<Matrix4>
 ): boolean {
+  if (!position || !normal || !camera) return false;
+
   const cameraDirection: Vector3 = camera.position.clone().normalize().sub(
     position.clone().normalize().applyMatrix4(rotationMatrixRef.current)
   );
@@ -150,4 +182,8 @@ export function getElementTranslate(el: HTMLElement): number[] | null {
 
 export function setElementTranslate(el: HTMLElement, x: number, y: number) {
   el?.setAttribute('transform', `translate(${x}, ${y})`);
+}
+
+export function stringifyJson(value: any) {
+  return JSON.stringify(value, null, 2);
 }

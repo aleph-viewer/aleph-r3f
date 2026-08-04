@@ -15,10 +15,11 @@ import {
   useHelper,
   useProgress,
 } from '@react-three/drei';
-import { BoxHelper, Group, Object3D, Vector3, Matrix4, Sphere } from 'three';
+import { BoxHelper, Group, Object3D, Vector3, Matrix4, Sphere, OrthographicCamera as ThreeOrthographicCamera } from 'three';
 import useStore from '@/Store';
 import {
   ViewerProps as ViewerProps,
+  CAMERA_LOADING_DONE,
   CAMERA_UPDATE,
   DBL_CLICK,
   Mode,
@@ -28,18 +29,21 @@ import {
   RECENTER,
   CAMERA_CONTROLS_ENABLED,
   Src,
-  Annotation,
+  SrcAnnotation,
+  JSON_EMIT_REQUEST,
+  JSON_EMIT,
 } from '@/types';
 import { useEventListener, useEventTrigger } from '@/lib/hooks/use-event';
 import useTimeout from '@/lib/hooks/use-timeout';
 import { AnnotationTools } from './annotation-tools';
+import { CanvasPlane } from './canvas-plane';
 import MeasurementTools from './measurement-tools';
-import { getBoundingSphere, normalizeSrc, parseAnnotations } from '@/lib/utils';
+import { getBoundingSphere, normalizeSrc, parseAnnotations, stringifyJson } from '@/lib/utils';
 import { ControlToolbar } from './control-toolbar';
 import { AnnotationToolbar } from './annotation-toolbar';
 import { BoundsText } from './bounds-text';
 
-function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, rotationPreset }: ViewerProps) {
+function Scene({ backgroundColor, environmentMap, initialCameraConfig, measurementUnits, onLoad, src, srcCollections, rotationPreset }: ViewerProps) {
   const boundsRef = useRef<Group | null>(null);
   const boundsLineRef = useRef<Group | null>(null);
   const boundsSphereRef = useRef<Sphere | null>(null);
@@ -53,13 +57,15 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
 
   const cameraPosition = new Vector3();
   const cameraTarget = new Vector3();
-  const { camera, gl } = useThree();
+  const { gl, get: getThreeState } = useThree();
 
   const {
     ambientLightIntensity,
+    annotations,
     axesEnabled,
     boundsEnabled,
     cameraMode,
+    collectionCameraConfig,
     gridEnabled,
     loading,
     mode,
@@ -69,6 +75,7 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
     rotationYDegrees,
     rotationZDegrees,
     rotationControlsEnabled,
+    sceneJson,
     setAnnotations,
     setLoading,
     setMeasurementUnits,
@@ -76,10 +83,14 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
     setRotationXDegrees,
     setRotationYDegrees,
     setRotationZDegrees,
+    setCameraMode,
+    setCollectionCameraConfig,
     setSelectedAnnotation,
+    setSceneJson,
     setSrcCollections,
     setSrcCollectionSelected,
     setSrcs,
+    srcCollectionSelected,
     srcs,
   } = useStore();
 
@@ -87,13 +98,25 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
     new Matrix4().makeRotationFromEuler(rotationEuler)
   );
 
-  const triggerCameraUpdateEvent = useEventTrigger(CAMERA_UPDATE);
+  // Tracks which collection was last navigated to; undefined = never navigated
+  const lastNavedCollectionRef = useRef<number | null | undefined>(undefined);
 
+  // Collection-specific config takes precedence over the prop
+  const activeConfig = collectionCameraConfig !== undefined ? collectionCameraConfig : initialCameraConfig;
+
+  const triggerCameraLoadingDoneEvent = useEventTrigger(CAMERA_LOADING_DONE);
+  const triggerCameraUpdateEvent = useEventTrigger(CAMERA_UPDATE);
+  const triggerJsonEmitEvent = useEventTrigger(JSON_EMIT);
+
+  // Set initial state
+
+  // Initial load, only do this on component mount
   useEffect(() => {
     if (measurementUnits) setMeasurementUnits(measurementUnits);
+    if (initialCameraConfig?.cameraType) setCameraMode(initialCameraConfig.cameraType);
   }, []);
 
-  // src or srcCollections changed
+  // src or srcCollections changed, set Srcs and initiate loading
   useEffect(() => {
     if (srcs.length === 0) {
       let newSrc: Src | undefined = undefined;
@@ -103,16 +126,20 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
         newSrc = srcCollections[0].src;
         setSrcCollectionSelected(0);
         setSrcCollections(srcCollections);
+        // Apply first collection's camera config, same as source-selector does on user selection
+        const camConfig = srcCollections[0].initialCameraConfig ?? null;
+        setCollectionCameraConfig(camConfig);
+        setCameraMode(camConfig?.cameraType === 'orthographic' ? 'orthographic' : 'perspective');
       }
 
       if (newSrc) {
         const normalizedSrc = normalizeSrc(newSrc);
         const srcAnnotations = parseAnnotations(normalizedSrc.reduce(
-          (acc: Annotation[], src) => { return acc.concat(src.annotations || []) }, 
+          (acc: SrcAnnotation[], src) => { return acc.concat(src.annotations || []) },
           []
         ));
         setSrcs(normalizedSrc);
-        setAnnotations(srcAnnotations && srcAnnotations.length ? srcAnnotations : []); 
+        setAnnotations(srcAnnotations && srcAnnotations.length ? srcAnnotations : []);
         // Camera will be recentered when loading is complete
       }
     } else {
@@ -120,31 +147,83 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
     }
   }, [srcs]);
 
-  // rotationXDegrees, rotationYDegrees, rotationZDegrees changed
-  useEffect(() => {  
-    setRotationFromArray([
-      rotationXDegrees * (Math.PI / 180), 
-      rotationYDegrees * (Math.PI / 180), 
-      rotationZDegrees * (Math.PI / 180)
-    ])
-  }, [rotationEuler, rotationXDegrees, rotationYDegrees, rotationZDegrees]);
-
-  // When loaded, set initial rotation
-  // todo: this looks good, but wrap up all the rotation setting in functions
+  // When loaded, immediately set initial rotation
   useEffect(() => {
-    if (!loading && rotationPreset) setRotationFromArray(rotationPreset, true); 
+    if (!loading && rotationPreset) setRotationFromArray(rotationPreset, true);
   }, [loading]);
 
-  // when loaded or camera type changed, zoom to object(s) instantaneously
+  // const requestJson = useEventTrigger(JSON_EMIT_REQUEST);
+
+  // When loaded or camera type changed, after a delay, zoom to object(s) instantaneously
   useTimeout(
     () => {
       if (!loading) {
-        recenter(true);
+        // Apply interactionMode constraints from camera config (controls available by now)
+        if (activeConfig?.interactionMode && cameraRefs.controls.current) {
+          const im = activeConfig.interactionMode;
+          if (im.includes('locked')) {
+            (cameraRefs.controls.current as any).enabled = false;
+          }
+          if (im.includes('hemisphere-orbit')) {
+            cameraRefs.controls.current.maxPolarAngle = Math.PI / 2;
+          }
+        }
+
+        // Navigate to camera position if defined AND this collection hasn't been navigated yet.
+        // Camera mode toggle re-fires the timeout but srcCollectionSelected is unchanged → recenter.
+        if (activeConfig?.position && lastNavedCollectionRef.current !== srcCollectionSelected) {
+          lastNavedCollectionRef.current = srcCollectionSelected;
+          setCameraConfig();
+          const pos = new Vector3(...activeConfig.position).applyMatrix4(rotationMatrixRef.current);
+          const tgt = activeConfig.target
+            ? new Vector3(...activeConfig.target).applyMatrix4(rotationMatrixRef.current)
+            : new Vector3(0, 0, 0);
+          cameraRefs.controls.current!.setLookAt(pos.x, pos.y, pos.z, tgt.x, tgt.y, tgt.z, false);
+          triggerCameraLoadingDoneEvent();
+        } else {
+          recenter(true);
+          triggerCameraLoadingDoneEvent();
+        }
       }
     },
     1,
     [loading, cameraMode]
   );
+
+  // Hooks for non-initial state changes
+
+  // rotationXDegrees, rotationYDegrees, rotationZDegrees changed
+  useEffect(() => {
+    setRotationFromArray([
+      rotationXDegrees * (Math.PI / 180),
+      rotationYDegrees * (Math.PI / 180),
+      rotationZDegrees * (Math.PI / 180)
+    ])
+  }, [rotationEuler, rotationXDegrees, rotationYDegrees, rotationZDegrees]);
+
+  useEffect(() => {
+    setSceneJson(stringifyJson(
+      {
+        annotations: annotations,
+        scene: {
+          ambientLightIntensity: ambientLightIntensity,
+          environmentMap: environmentMap,
+          rotation: [rotationEuler.x, rotationEuler.y, rotationEuler.z]
+        },
+      }
+    ));
+  }, [
+    ambientLightIntensity,
+    annotations,
+    environmentMap,
+    rotationEuler,
+    rotationXDegrees,
+    rotationYDegrees,
+    rotationZDegrees,
+    setSceneJson
+  ]);
+
+  // Event listeners
 
   const handleRecenterEvent = (e: any) => {
     recenter(e.detail);
@@ -158,10 +237,18 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
 
   useEventListener(CAMERA_CONTROLS_ENABLED, handleCameraEnabledEvent);
 
+  const handleEmitJsonRequest = () => {
+    triggerJsonEmitEvent(JSON.parse(sceneJson));
+  };
+
+  useEventListener(JSON_EMIT_REQUEST, handleEmitJsonRequest);
+
+  // Methods
+
   function zoomToObject(object: Object3D, instant?: boolean, padding: number | undefined = undefined) {
     if (!padding) {
       if (!boundsSphereRef.current) boundsSphereRef.current = getBoundingSphere(object);
-      padding = boundsSphereRef.current.radius * 0.1;
+      padding = boundsSphereRef.current.radius * 0.2;
     }
 
     cameraRefs.controls.current!.fitToBox(object, !instant, {
@@ -184,31 +271,39 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
     if (boundsRef.current) {
       boundsSphereRef.current = getBoundingSphere(boundsRef.current);
       const radius = boundsSphereRef.current.radius;
+      // Imperative read so we always get the live camera, not the render-phase closure capture.
+      // Drei's makeDefault effect runs before Scene's effects, so R3F's store already holds the
+      // new camera type by the time this is called.
+      const liveCamera = getThreeState().camera;
 
       if (orthographicEnabled) {
         const cameraObjectDistance = cameraRefs.controls.current?.distance;
         if (cameraObjectDistance) {
-          camera.near = cameraObjectDistance - (radius * 100);
-          camera.far = cameraObjectDistance + (radius * 100);
-          camera.updateProjectionMatrix();
+          liveCamera.near = cameraObjectDistance - (radius * 100);
+          liveCamera.far = cameraObjectDistance + (radius * 100);
+          liveCamera.updateProjectionMatrix();
         }
 
-        if (cameraRefs.controls.current) {
-          if ('isOrthographicCamera' in camera && camera.isOrthographicCamera) {
-            const width = camera.right - camera.left;
-            const height = camera.top - camera.bottom;
-            const diameter = radius * 2;
-            const zoom = Math.min( width / diameter, height / diameter );
+        if (cameraRefs.controls.current && liveCamera instanceof ThreeOrthographicCamera) {
+          const width = liveCamera.right - liveCamera.left;
+          const height = liveCamera.top - liveCamera.bottom;
+          const diameter = radius * 2;
+          const zoom = Math.min( width / diameter, height / diameter );
 
-            // Don't set maximum zoom for multiple objects
-            cameraRefs.controls.current.maxZoom = (srcs.length === 1) ? (zoom*4) : Infinity;
-            cameraRefs.controls.current.minZoom = zoom/4;
-          }
+          // Don't set maximum zoom for multiple objects
+          cameraRefs.controls.current.maxZoom = (srcs.length === 1) ? (zoom*4) : Infinity;
+          cameraRefs.controls.current.minZoom = zoom/4;
+          // Apply fit zoom with padding. For the recenter path fitToBox overrides this;
+          // for the configured-position path this is the only zoom-setter called.
+          void cameraRefs.controls.current.zoomTo(zoom / 1.2, false);
         }
       } else {
-        camera.near = radius * 0.01;
-        camera.far = radius * 200;
-        camera.updateProjectionMatrix();
+        liveCamera.near = radius * 0.01;
+        liveCamera.far = radius * 200;
+
+        if (activeConfig?.near !== undefined) liveCamera.near = activeConfig.near;
+        if (activeConfig?.far !== undefined)  liveCamera.far  = activeConfig.far;
+        liveCamera.updateProjectionMatrix();
 
         if (cameraRefs.controls.current) {
           // Don't set minimum distance for multiple objects
@@ -227,7 +322,7 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
     if (setRotationDegrees) {
       setRotationXDegrees(rotationEuler.x * (180 / Math.PI));
       setRotationYDegrees(rotationEuler.y * (180 / Math.PI));
-      setRotationZDegrees(rotationEuler.z * (180 / Math.PI));  
+      setRotationZDegrees(rotationEuler.z * (180 / Math.PI));
     }
   }
 
@@ -237,7 +332,7 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
     setRotationEuler(rotationEuler.setFromRotationMatrix(matrix, 'XYZ'));
     setRotationXDegrees(rotationEuler.x * (180 / Math.PI));
     setRotationYDegrees(rotationEuler.y * (180 / Math.PI));
-    setRotationZDegrees(rotationEuler.z * (180 / Math.PI));  
+    setRotationZDegrees(rotationEuler.z * (180 / Math.PI));
   }
 
   function getGridProperties(): [size?: number | undefined, divisions?: number | undefined] {
@@ -251,9 +346,9 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
         if (boundsSphereRef.current.radius! < breakPoint) {
           cellWidth = breakPoint/10.0;
           break;
-        } 
+        }
       }
-      
+
       return [cellWidth * 100.0, 100]
     } else {
       return [100, 100];
@@ -341,14 +436,29 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
   }
 
   const Tools: { [key in Mode]: React.ReactElement } = {
-    annotation: <AnnotationTools cameraRefs={cameraRefs} rotationMatrixRef={rotationMatrixRef} />,
+    annotation: <AnnotationTools cameraRefs={cameraRefs} boundsSphereRef={boundsSphereRef} rotationMatrixRef={rotationMatrixRef} />,
     measurement: <MeasurementTools rotationMatrixRef={rotationMatrixRef} />,
-    scene: <AnnotationTools cameraRefs={cameraRefs} rotationMatrixRef={rotationMatrixRef} viewOnly={true} />,
+    scene: <AnnotationTools cameraRefs={cameraRefs} boundsSphereRef={boundsSphereRef} rotationMatrixRef={rotationMatrixRef} viewOnly={true} />,
   };
 
   return (
     <>
-      {orthographicEnabled ? <OrthographicCamera makeDefault position={[0, 0, 2]} /> : <PerspectiveCamera makeDefault fov={30} position={[0, 0, 2]} />}
+      {backgroundColor && <color attach="background" args={[backgroundColor]} />}
+      {orthographicEnabled
+        ? <OrthographicCamera
+            makeDefault
+            near={activeConfig?.near}
+            far={activeConfig?.far}
+            position={activeConfig?.position ?? [0, 0, 2]}
+          />
+        : <PerspectiveCamera
+            makeDefault
+            fov={activeConfig?.fieldOfView ?? 30}
+            near={activeConfig?.near}
+            far={activeConfig?.far}
+            position={activeConfig?.position ?? [0, 0, 2]}
+          />
+      }
       <CameraControls ref={cameraRefs.controls} onChange={onCameraChange} makeDefault />
       <ambientLight intensity={ambientLightIntensity} />
 
@@ -357,26 +467,29 @@ function Scene({ environmentMap, measurementUnits, onLoad, src, srcCollections, 
           ref={rotationControlsRef}
           autoTransform={false}
           depthTest={false}
-          disableAxes={true} 
-          disableScaling={true} 
-          disableSliders={true} 
+          disableAxes={true}
+          disableScaling={true}
+          disableSliders={true}
           enabled={rotationControlsEnabled && mode == 'scene'}
           fixed={true}
           matrix={rotationMatrixRef.current}
           onDrag={(local) => setRotationFromMatrix4(local)}
-          scale={300} 
+          scale={300}
         >
           <Bounds lineVisible={boundsEnabled && mode == 'scene'}>
-            {srcs.map((src, index) => { return (
-              <GLTF key={index} {...src} />
-            );})}
+            {srcs.map((src, index) => {
+              if (src.type === 'canvas' && src.corners) {
+                return <CanvasPlane key={index} url={src.url} corners={src.corners} />;
+              }
+              return <GLTF key={index} {...src} />;
+            })}
           </Bounds>
         </PivotControls>
       </Suspense>
       <Environment preset={environmentMap} />
       {Tools[mode]}
       { (gridEnabled && mode == 'scene') && <gridHelper args={getGridProperties()} />}
-      { (axesEnabled && mode == 'scene') && 
+      { (axesEnabled && mode == 'scene') &&
         <GizmoHelper alignment="bottom-right" margin={[100, 100]}>
           <GizmoViewport labelColor="white" axisHeadScale={1} />
         </GizmoHelper>
