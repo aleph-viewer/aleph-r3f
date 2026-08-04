@@ -11,10 +11,12 @@ import { useDrag } from '@use-gesture/react';
 import useKeyDown from '@/lib/hooks/use-key-press';
 
 export function ObjectMeasurementTools({ rotationMatrixRef }: { rotationMatrixRef: React.MutableRefObject<Matrix4> }) {
-  const { 
-    objectMeasurements: measurements, 
-    setObjectMeasurements: setMeasurements, 
+  const {
+    objectMeasurements: measurements,
+    setObjectMeasurements: setMeasurements,
     measurementUnits,
+    srcs,
+    volumeRenderMode,
   } = useStore();
   const { scene, camera, pointer, raycaster, size } = useThree();
 
@@ -22,6 +24,11 @@ export function ObjectMeasurementTools({ rotationMatrixRef }: { rotationMatrixRe
 
   const v1 = new Vector3();
   const v2 = new Vector3();
+
+  // Isosurface/MIP are raymarched, non-depth-tested renders — a raycast hit against the underlying
+  // volume mesh doesn't correspond to what's actually on screen, so placement and repositioning
+  // can't be trusted there. Mirrors the same restriction on annotations (annotation-tools.tsx).
+  const volumePlacementRestricted = srcs.some((src) => src.type === 'volume') && volumeRenderMode !== 'slices';
 
   useKeyDown('Delete', () => {
     // delete measurement
@@ -224,6 +231,8 @@ export function ObjectMeasurementTools({ rotationMatrixRef }: { rotationMatrixRe
   const triggerCameraControlsEnabledEvent = useEventTrigger(CAMERA_CONTROLS_ENABLED);
 
   const bind = useDrag((state) => {
+    if (volumePlacementRestricted) return;
+
     const el = state.currentTarget as HTMLDivElement;
 
     // get the element's index from the data-index attribute
@@ -368,6 +377,8 @@ export function ObjectMeasurementTools({ rotationMatrixRef }: { rotationMatrixRe
         width="100vw"
         height="100vh"
         onDoubleClick={(_e: React.MouseEvent<SVGElement>) => {
+          if (volumePlacementRestricted) return;
+
           const intersects: Intersection<Object3D>[] = getIntersects();
 
           if (intersects.length > 0) {
@@ -416,7 +427,7 @@ export function ObjectMeasurementTools({ rotationMatrixRef }: { rotationMatrixRe
                 onMouseUp={(_e: React.MouseEvent<SVGElement>) => {
                   if (isFacingCamera(measurement.position!, measurement.normal!, camera, rotationMatrixRef)) {
                     // if dragging this point
-                    if (dragRef.current === index) {
+                    if (dragRef.current === index && !volumePlacementRestricted) {
                       const intersects: Intersection<Object3D>[] = getIntersects();
 
                       if (intersects.length > 0) {
