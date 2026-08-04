@@ -1,12 +1,12 @@
 import { useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import useStore from '@/Store';
-import { Intersection, Matrix4, Object3D, Object3DEventMap, Vector3 } from 'three';
+import { Intersection, Matrix4, Object3D, Vector3 } from 'three';
 import { useEventListener, useEventTrigger } from '@/lib/hooks/use-event';
 import { ANNO_CLICK, Annotation, CAMERA_CONTROLS_ENABLED, CameraRefs } from '@/types';
 import React from 'react';
 import { Html } from '@react-three/drei';
-import { applyMatrix4Inverse, cn } from '@/lib/utils';
+import { applyMatrix4Inverse, calculateScreenPosition, cn, getIntersects, isFacingCamera } from '@/lib/utils';
 import { useDrag } from '@use-gesture/react';
 
 export function AnnotationTools({ cameraRefs, rotationMatrixRef, viewOnly }: { cameraRefs: CameraRefs, rotationMatrixRef: React.MutableRefObject<Matrix4>, viewOnly?: boolean }) {
@@ -17,9 +17,6 @@ export function AnnotationTools({ cameraRefs, rotationMatrixRef, viewOnly }: { c
     setSelectedAnnotation 
   } = useStore();
   const { scene, camera, pointer, raycaster, size } = useThree();
-
-  // if a dot product is less than this, then the normal is facing away from the camera
-  const DOT_PRODUCT_THRESHOLD = Math.PI * -0.1;
 
   const dragRef = useRef<number | null>(null);
 
@@ -49,20 +46,6 @@ export function AnnotationTools({ cameraRefs, rotationMatrixRef, viewOnly }: { c
 
   const triggerAnnoClick = useEventTrigger(ANNO_CLICK);
 
-
-  function isFacingCamera(anno: Annotation): boolean {
-    const cameraDirection: Vector3 = camera.position.clone().normalize().sub(
-      anno.position!.clone().normalize().applyMatrix4(rotationMatrixRef.current)
-    );
-    const dotProduct: number = cameraDirection.dot(anno.normal!.clone().applyMatrix4(rotationMatrixRef.current));
-
-    if (dotProduct < DOT_PRODUCT_THRESHOLD) {
-      return false;
-    }
-
-    return true;
-  }
-
   function updateAnnotationPosition(idx: number, x: number, y: number) {
     const annoEl: HTMLElement = document.getElementById(`point-${idx}`)!;
 
@@ -75,7 +58,7 @@ export function AnnotationTools({ cameraRefs, rotationMatrixRef, viewOnly }: { c
     annotations.forEach((anno: Annotation, idx: number) => {
       // if not dragging the annotation, update its position
       if (dragRef.current !== idx) {
-        const [x, y] = calculatePosition(anno);
+        const [x, y] = calculateScreenPosition(anno.position!, rotationMatrixRef, camera, size);
         updateAnnotationPosition(idx, x, y);
       }
     });
@@ -89,7 +72,7 @@ export function AnnotationTools({ cameraRefs, rotationMatrixRef, viewOnly }: { c
       const annoEl: HTMLElement = document.getElementById(`point-${idx}`)!;
 
       if (annoEl) {
-        if (isFacingCamera(anno)) {
+        if (isFacingCamera(anno.position!, anno.normal!, camera, rotationMatrixRef)) {
           annoEl.classList.remove('facing-away');
         } else {
           annoEl.classList.add('facing-away');
@@ -113,7 +96,7 @@ export function AnnotationTools({ cameraRefs, rotationMatrixRef, viewOnly }: { c
     // get the element's index from the data-index attribute
     const idx = parseInt(el.getAttribute('data-idx')!);
 
-    if (!isFacingCamera(annotations[idx])) {
+    if (!isFacingCamera(annotations[idx].position!, annotations[idx].normal!, camera, rotationMatrixRef)) {
       return;
     }
 
@@ -156,20 +139,6 @@ export function AnnotationTools({ cameraRefs, rotationMatrixRef, viewOnly }: { c
     }
   });
 
-  // https://github.com/pmndrs/drei/blob/master/src/web/Html.tsx#L25
-  function calculatePosition(anno: Annotation) {
-    const objectPos = v1.copy(anno.position!).applyMatrix4(rotationMatrixRef.current);
-    objectPos.project(camera);
-    const widthHalf = size.width / 2;
-    const heightHalf = size.height / 2;
-    return [objectPos.x * widthHalf + widthHalf, -(objectPos.y * heightHalf) + heightHalf];
-  }
-
-  function getIntersects(): Intersection<Object3D<Object3DEventMap>>[] {
-    raycaster.setFromCamera(pointer, camera);
-    return raycaster.intersectObjects(scene.children, true);
-  }
-
   function drawAnnotations() {
     let primaryAnnotation: Annotation | null = null;
     let primaryIndex: number | null = null; 
@@ -203,15 +172,15 @@ export function AnnotationTools({ cameraRefs, rotationMatrixRef, viewOnly }: { c
             selected: selectedAnnotation === index,
           })}
           onMouseDown={(_e: React.MouseEvent<SVGElement>) => {
-            if (isFacingCamera(anno)) {
+            if (isFacingCamera(anno.position!, anno.normal!, camera, rotationMatrixRef)) {
               triggerCameraControlsEnabledEvent(false);
             }
           }}
           onMouseUp={(_e: React.MouseEvent<SVGElement>) => {
-            if (isFacingCamera(anno)) {
+            if (isFacingCamera(anno.position!, anno.normal!, camera, rotationMatrixRef)) {
               // if was dragging this annotation
               if (dragRef.current === index && !viewOnly) {
-                const intersects: Intersection<Object3D>[] = getIntersects();
+                const intersects: Intersection<Object3D>[] = getIntersects(scene, camera, pointer, raycaster);
 
                 if (intersects.length > 0) {
                   // update annotation position
@@ -274,7 +243,7 @@ export function AnnotationTools({ cameraRefs, rotationMatrixRef, viewOnly }: { c
         onDoubleClick={(_e: React.MouseEvent<SVGElement>) => {
           if (viewOnly) return;
 
-          const intersects: Intersection<Object3D>[] = getIntersects();
+          const intersects: Intersection<Object3D>[] = getIntersects(scene, camera, pointer, raycaster);
 
           if (intersects.length > 0) {
             setAnnotations([

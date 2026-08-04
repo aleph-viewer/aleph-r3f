@@ -6,7 +6,7 @@ import { useEventTrigger } from '@/lib/hooks/use-event';
 import { ObjectMeasurement, CAMERA_CONTROLS_ENABLED } from '@/types';
 import React from 'react';
 import { Html } from '@react-three/drei';
-import { applyMatrix4Inverse, cn, getElementTranslate, setElementTranslate } from '@/lib/utils';
+import { applyMatrix4Inverse, calculateScreenPosition, cn, getElementTranslate, isFacingCamera, setElementTranslate } from '@/lib/utils';
 import { useDrag } from '@use-gesture/react';
 import useKeyDown from '@/lib/hooks/use-key-press';
 
@@ -18,14 +18,10 @@ export function ObjectMeasurementTools({ rotationMatrixRef }: { rotationMatrixRe
   } = useStore();
   const { scene, camera, pointer, raycaster, size } = useThree();
 
-  // if a dot product is less than this, then the normal is facing away from the camera
-  const DOT_PRODUCT_THRESHOLD = Math.PI * -0.1;
-
   const dragRef = useRef<number | null>(null);
 
   const v1 = new Vector3();
   const v2 = new Vector3();
-  const v3 = new Vector3();
 
   useKeyDown('Delete', () => {
     // delete measurement
@@ -53,39 +49,17 @@ export function ObjectMeasurementTools({ rotationMatrixRef }: { rotationMatrixRe
     }
   }
 
-  // https://github.com/pmndrs/drei/blob/master/src/web/Html.tsx#L25
-  function calculateScreenPosition(position: Vector3) {
-    const objectPos = v1.copy(position).applyMatrix4(rotationMatrixRef.current);
-    objectPos.project(camera);
-    const widthHalf = size.width / 2;
-    const heightHalf = size.height / 2;
-    return [objectPos.x * widthHalf + widthHalf, -(objectPos.y * heightHalf) + heightHalf];
-  }
-
-  function isFacingCamera(measurement: ObjectMeasurement): boolean {
-    const cameraDirection: Vector3 = camera.position.clone().normalize().sub(
-      measurement.position!.clone().normalize().applyMatrix4(rotationMatrixRef.current)
-    );
-    const dotProduct: number = cameraDirection.dot(measurement.normal!.clone().applyMatrix4(rotationMatrixRef.current));
-
-    if (dotProduct < DOT_PRODUCT_THRESHOLD) {
-      return false;
-    }
-
-    return true;
-  }
-
   function updatePointPositions() {
     measurements.forEach((measurement: ObjectMeasurement, idx: number) => {
       const point: HTMLElement = document.getElementById(`point-${idx}`)!;
 
       // if not dragging the point, update its position
       if (dragRef.current !== idx) {
-        const [x, y] = calculateScreenPosition(measurement.position!);
+        const [x, y] = calculateScreenPosition(measurement.position!, rotationMatrixRef, camera, size);
         setElementTranslate(point, x, y);
       }
 
-      if (isFacingCamera(measurement)) {
+      if (isFacingCamera(measurement.position!, measurement.normal!, camera, rotationMatrixRef)) {
         point?.classList.remove('facing-away');
       } else {
         point?.classList.add('facing-away');
@@ -129,13 +103,13 @@ export function ObjectMeasurementTools({ rotationMatrixRef }: { rotationMatrixRe
       const idx0 = Number(label.getAttribute('data-idx0'));
       const idx1 = Number(label.getAttribute('data-idx1'));
 
-      const pos2D1: number[] = calculateScreenPosition(measurements[idx0].position!);
-      const pos2D2: number[] = calculateScreenPosition(measurements[idx1].position!);
+      const pos2D1: number[] = calculateScreenPosition(measurements[idx0].position!, rotationMatrixRef, camera, size);
+      const pos2D2: number[] = calculateScreenPosition(measurements[idx1].position!, rotationMatrixRef, camera, size);
 
       const avgX = (pos2D1[0] + pos2D2[0]) / 2;
       const avgY = (pos2D1[1] + pos2D2[1]) / 2;
 
-      label.setAttribute('x', String(avgX - 30));
+      label.setAttribute('x', String(avgX - 50));
       label.setAttribute('y', String(avgY - 15));
 
       const pos3D1: Vector3 = measurements[idx0].position!;
@@ -172,9 +146,9 @@ export function ObjectMeasurementTools({ rotationMatrixRef }: { rotationMatrixRe
       const idx1 = Number(label.getAttribute('data-idx1'));
       const idx2 = Number(label.getAttribute('data-idx2'));
 
-      const pos2D1: number[] = calculateScreenPosition(measurements[idx0].position!);
-      const pos2D2: number[] = calculateScreenPosition(measurements[idx1].position!);
-      const pos2D3: number[] = calculateScreenPosition(measurements[idx2].position!);
+      const pos2D1: number[] = calculateScreenPosition(measurements[idx0].position!, rotationMatrixRef, camera, size);
+      const pos2D2: number[] = calculateScreenPosition(measurements[idx1].position!, rotationMatrixRef, camera, size);
+      const pos2D3: number[] = calculateScreenPosition(measurements[idx2].position!, rotationMatrixRef, camera, size);
 
       const line1 = {
         x1: pos2D1[0],
@@ -255,7 +229,7 @@ export function ObjectMeasurementTools({ rotationMatrixRef }: { rotationMatrixRe
     // get the element's index from the data-index attribute
     const idx = parseInt(el.getAttribute('data-idx')!);
 
-    if (!isFacingCamera(measurements[idx])) {
+    if (!isFacingCamera(measurements[idx].position!, measurements[idx].normal!, camera, rotationMatrixRef)) {
       return;
     }
 
@@ -357,8 +331,8 @@ export function ObjectMeasurementTools({ rotationMatrixRef }: { rotationMatrixRe
 
   function calculateAngle(point1: Vector3, point2: Vector3, point3: Vector3) {
     // Create vectors
-    const vector1 = v2.subVectors(point2, point1);
-    const vector2 = v3.subVectors(point2, point3);
+    const vector1 = v1.subVectors(point2, point1);
+    const vector2 = v2.subVectors(point2, point3);
 
     // Normalize the vectors
     vector1.normalize();
@@ -434,13 +408,13 @@ export function ObjectMeasurementTools({ rotationMatrixRef }: { rotationMatrixRe
                 data-idx={index}
                 className={cn('point')}
                 onMouseDown={(_e: React.MouseEvent<SVGElement>) => {
-                  if (isFacingCamera(measurement)) {
+                  if (isFacingCamera(measurement.position!, measurement.normal!, camera, rotationMatrixRef)) {
                     triggerCameraControlsEnabledEvent(false);
                     hideLabels();
                   }
                 }}
                 onMouseUp={(_e: React.MouseEvent<SVGElement>) => {
-                  if (isFacingCamera(measurement)) {
+                  if (isFacingCamera(measurement.position!, measurement.normal!, camera, rotationMatrixRef)) {
                     // if dragging this point
                     if (dragRef.current === index) {
                       const intersects: Intersection<Object3D>[] = getIntersects();

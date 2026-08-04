@@ -3,6 +3,7 @@ import { Src, SrcCollections, SrcObj } from './index';
 
 type BaseViewerProps = {
   environmentMap?: PresetsType;
+  measurementUnits?: 'm' | 'mm';
   onLoad?: (src: SrcObj[]) => void;
   rotationPreset?: [number, number, number];
 };

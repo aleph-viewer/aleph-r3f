@@ -1,7 +1,15 @@
 import { Src, SrcObj } from '@/types';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { Box3, Matrix4, Object3D, Sphere, Vector3 } from 'three';
+import { Box3, Matrix4, Object3D, Sphere, Vector3, Camera, Intersection, Object3DEventMap, Scene, Vector2, Raycaster } from 'three';
+import { Size } from '@react-three/fiber';
+
+// if a dot product is less than this, then the normal is facing away from the camera
+const DOT_PRODUCT_THRESHOLD = Math.PI * -0.1;
+
+const box = new Box3();
+const sphere = new Sphere();
+const v1 = new Vector3();
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -15,9 +23,6 @@ export function applyMatrix4Inverse(v: Vector3, m: Matrix4) {
 export function areObjectsIdentical(a: any, b: any) {
   return JSON.stringify(a) === JSON.stringify(b);
 }
-
-const box = new Box3();
-const sphere = new Sphere();
 
 export function getBoundingSphere(object: Object3D) {
   return box.setFromObject(object).getBoundingSphere(sphere);
@@ -73,6 +78,51 @@ export const parseAnnotations = (value: any) => {
 
   return value;
 };
+
+// Translate XYZ coordinates to 2D SVG screen position, projecting camera view
+// https://github.com/pmndrs/drei/blob/master/src/web/Html.tsx#L25
+export function calculateScreenPosition(
+  position: Vector3, 
+  rotationMatrixRef: React.MutableRefObject<Matrix4>, 
+  camera: Camera, 
+  size: Size
+) { 
+  const objectPos = v1.copy(position).applyMatrix4(rotationMatrixRef.current);
+  objectPos.project(camera);
+  const widthHalf = size.width / 2;
+  const heightHalf = size.height / 2;
+  return [objectPos.x * widthHalf + widthHalf, -(objectPos.y * heightHalf) + heightHalf];
+}
+
+// Get the intersection of the pointer with the scene
+export function getIntersects(
+  scene: Scene,
+  camera: Camera,
+  pointer: Vector2,
+  raycaster: Raycaster
+): Intersection<Object3D<Object3DEventMap>>[] {
+  raycaster.setFromCamera(pointer, camera);
+  return raycaster.intersectObjects(scene.children, true);
+}
+
+// Does the vector face the camera?
+export function isFacingCamera(
+  position: Vector3,
+  normal: Vector3,
+  camera: Camera,
+  rotationMatrixRef: React.MutableRefObject<Matrix4>
+): boolean {
+  const cameraDirection: Vector3 = camera.position.clone().normalize().sub(
+    position.clone().normalize().applyMatrix4(rotationMatrixRef.current)
+  );
+  const dotProduct: number = cameraDirection.dot(normal.clone().applyMatrix4(rotationMatrixRef.current));
+
+  if (dotProduct < DOT_PRODUCT_THRESHOLD) {
+    return false;
+  }
+
+  return true;
+}
 
 export function getElementTranslate(el: HTMLElement): number[] | null {
   let x: number;
