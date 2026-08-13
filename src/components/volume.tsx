@@ -1,8 +1,9 @@
-import { useEffect, useMemo } from 'react';
-import { ClampToEdgeWrapping, Data3DTexture, LinearFilter, RedFormat, UnsignedByteType } from 'three';
+import { useEffect, useMemo, useRef } from 'react';
+import { ClampToEdgeWrapping, Data3DTexture, HalfFloatType, LinearFilter, RedFormat } from 'three';
 import useStore from '@/Store';
 import { SrcObj } from '@/types/Src';
-import { VOLUME_LOADING_PROGRESS } from '@/types/Events';
+import { VolumeData } from '@/types/Volume';
+import { VOLUME_LOADING_ERROR, VOLUME_LOADING_PROGRESS } from '@/types/Events';
 import { useEventTrigger } from '@/lib/hooks/use-event';
 import { useDicomVolume } from '@/lib/hooks/use-dicom-volume';
 import { MM_TO_SCENE_UNITS } from '@/lib/volume-utils';
@@ -12,9 +13,18 @@ import { VolumeRaycast } from './volume-raycast';
 type VolumeProps = SrcObj;
 
 export const Volume = ({ url, position = [0, 0, 0], rotation = [0, 0, 0], scale = [1, 1, 1] }: VolumeProps) => {
-  const { volumeRenderMode, volumeIsovalue } = useStore();
-  const { volume, progress } = useDicomVolume(url);
+  const {
+    volumeRenderMode,
+    volumeIsovalue,
+    setVolumeWindowCenter,
+    setVolumeWindowWidth,
+    setVolumeIsovalue,
+    setVolumeDataMin,
+    setVolumeDataMax,
+  } = useStore();
+  const { volume, progress, error } = useDicomVolume(url);
   const triggerVolumeLoadingProgress = useEventTrigger(VOLUME_LOADING_PROGRESS);
+  const triggerVolumeLoadingError = useEventTrigger(VOLUME_LOADING_ERROR);
 
   // Window CustomEvent, not the store: a store write here would re-render/remount this component
   // (nested under Bounds), re-triggering the same write. No unmount cleanup — Loader/
@@ -23,13 +33,36 @@ export const Volume = ({ url, position = [0, 0, 0], rotation = [0, 0, 0], scale 
     triggerVolumeLoadingProgress(progress);
   }, [progress, triggerVolumeLoadingProgress]);
 
-  // One full-resolution texture shared by both render modes.
+  useEffect(() => {
+    if (!error) return;
+    console.error(error);
+    triggerVolumeLoadingError(error.message);
+  }, [error, triggerVolumeLoadingError]);
+
+  // Seeds window/level, isovalue, and slider range defaults from the volume's real data range
+  const seededVolumeRef = useRef<VolumeData | null>(null);
+  useEffect(() => {
+    if (!volume || seededVolumeRef.current === volume) return;
+    seededVolumeRef.current = volume;
+
+    const center = volume.windowCenter ?? (volume.min + volume.max) / 2;
+    const width = volume.windowWidth ?? Math.max(volume.max - volume.min, 1);
+
+    setVolumeDataMin(volume.min);
+    setVolumeDataMax(volume.max);
+    setVolumeWindowCenter(center);
+    setVolumeWindowWidth(width);
+    setVolumeIsovalue((volume.min + volume.max) / 2);
+  }, [volume, setVolumeDataMin, setVolumeDataMax, setVolumeWindowCenter, setVolumeWindowWidth, setVolumeIsovalue]);
+
+  // One full-resolution texture shared by both render modes. Data is half-float bit patterns of
+  // rescaled real-world values (see decode-worker.ts) regardless of the source DICOM bit depth.
   const texture = useMemo(() => {
     if (!volume) return null;
     const [x, y, z] = volume.dimensions;
     const tex = new Data3DTexture(volume.data, x, y, z);
     tex.format = RedFormat;
-    tex.type = UnsignedByteType;
+    tex.type = HalfFloatType;
     tex.minFilter = tex.magFilter = LinearFilter;
     tex.wrapR = ClampToEdgeWrapping;
     tex.wrapS = ClampToEdgeWrapping;
@@ -56,6 +89,8 @@ export const Volume = ({ url, position = [0, 0, 0], rotation = [0, 0, 0], scale 
           voxelScale={volume.spacing.map((s) => s * MM_TO_SCENE_UNITS) as [number, number, number]}
           renderStyle={volumeRenderMode === 'mip' ? 'mip' : 'iso'}
           isovalue={volumeIsovalue}
+          dataMin={volume.min}
+          dataMax={volume.max}
         />
       ) : (
         <VolumeSlices volume={volume} texture={texture} />

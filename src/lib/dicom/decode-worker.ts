@@ -1,3 +1,4 @@
+import { DataUtils } from 'three';
 import { decodeFrame } from './decode-frames';
 import { DicomVolumeMetadata, parseDicomVolume } from './parse-dicom';
 
@@ -23,21 +24,25 @@ ctx.onmessage = (event) => {
   try {
     const byteArray = new Uint8Array(event.data.buffer);
     const parsed = parseDicomVolume(byteArray);
-    const { rows, columns, samplesPerPixel, numFrames } = parsed.metadata;
+    const { rows, columns, samplesPerPixel, numFrames, rescaleSlope, rescaleIntercept } = parsed.metadata;
     const frameSize = rows * columns * samplesPerPixel;
-    const volume = new Uint8Array(frameSize * numFrames);
+    // Half-float bit patterns of rescaled real-world values, not raw sample values — every source
+    // bit depth (8/16/32) is unified into this one representation so the texture/shader layer
+    // never branches on it.
+    const volume = new Uint16Array(frameSize * numFrames);
 
-    let min = 255;
-    let max = 0;
+    let min = Infinity;
+    let max = -Infinity;
 
     for (let frameIndex = 0; frameIndex < numFrames; frameIndex++) {
       const frame = decodeFrame(parsed, frameIndex);
-      volume.set(frame, frameIndex * frameSize);
+      const frameOffset = frameIndex * frameSize;
 
       for (let i = 0; i < frame.length; i++) {
-        const value = frame[i];
+        const value = frame[i] * rescaleSlope + rescaleIntercept;
         if (value < min) min = value;
         if (value > max) max = value;
+        volume[frameOffset + i] = DataUtils.toHalfFloat(value);
       }
 
       if (frameIndex % 25 === 0 || frameIndex === numFrames - 1) {

@@ -30,9 +30,11 @@ function decodeVolume(url: string, onProgress: (progress: number) => void): Prom
             dimensions: [metadata.columns, metadata.rows, metadata.numFrames],
             // pixelSpacing is [row spacing, column spacing] -> [Y, X]; dimensions are [X, Y, Z]
             spacing: [metadata.pixelSpacing[1], metadata.pixelSpacing[0], metadata.spacingBetweenSlices],
-            data: new Uint8Array(data),
+            data: new Uint16Array(data),
             min,
             max,
+            windowCenter: metadata.windowCenter,
+            windowWidth: metadata.windowWidth,
           };
           volumeCache.set(url, volume);
           worker.terminate();

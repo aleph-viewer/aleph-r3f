@@ -198,10 +198,12 @@ type VolumeRaycastProps = {
   dimensions: [number, number, number];
   voxelScale: [number, number, number];
   renderStyle: 'mip' | 'iso';
-  isovalue: number; // 0-255, matching the rest of the app's pixel-value convention; ignored for mip
+  isovalue: number; // real (rescaled) pixel-value units, matching the volume's own data range; ignored for mip
+  dataMin: number; // real (rescaled) pixel-value units — colormap/MIP display range
+  dataMax: number;
 };
 
-export const VolumeRaycast = ({ texture, dimensions, voxelScale, renderStyle, isovalue }: VolumeRaycastProps) => {
+export const VolumeRaycast = ({ texture, dimensions, voxelScale, renderStyle, isovalue, dataMin, dataMax }: VolumeRaycastProps) => {
   const invalidate = useThree((state) => state.invalidate);
   const [dimX, dimY, dimZ] = dimensions;
 
@@ -220,8 +222,8 @@ export const VolumeRaycast = ({ texture, dimensions, voxelScale, renderStyle, is
       uniforms: {
         u_size: { value: new Vector3(dimX, dimY, dimZ) },
         u_renderstyle: { value: renderStyle === 'mip' ? 0 : 1 },
-        u_renderthreshold: { value: isovalue / 255 },
-        u_clim: { value: new Vector2(0, 1) },
+        u_renderthreshold: { value: isovalue },
+        u_clim: { value: new Vector2(dataMin, dataMax) },
         u_data: { value: texture },
         u_cmdata: { value: grayscaleColormap },
       },
@@ -230,11 +232,11 @@ export const VolumeRaycast = ({ texture, dimensions, voxelScale, renderStyle, is
     });
     // renderStyle/isovalue are seeded here but kept live via the effect below
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [texture, dimX, dimY, dimZ]);
+  }, [texture, dimX, dimY, dimZ, dataMin, dataMax]);
 
   useEffect(() => {
     material.uniforms.u_renderstyle.value = renderStyle === 'mip' ? 0 : 1;
-    material.uniforms.u_renderthreshold.value = isovalue / 255;
+    material.uniforms.u_renderthreshold.value = isovalue;
     // Uniform mutation bypasses R3F's prop-change tracking, so demand-mode frameloop (see
     // viewer.tsx) won't pick it up on its own.
     invalidate();

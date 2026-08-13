@@ -33,6 +33,10 @@ type State = {
   srcs: SrcObj[];
   volumeRenderMode: VolumeRenderMode;
   volumeIsovalue: number;
+  // Real-unit min/max of the currently loaded volume's data, seeded on load — used to size the
+  // window/level and isovalue sliders to the actual data range instead of a fixed 8-bit range.
+  volumeDataMin: number;
+  volumeDataMax: number;
   volumeSliceXEnabled: boolean;
   volumeSliceYEnabled: boolean;
   volumeSliceZEnabled: boolean;
@@ -68,6 +72,8 @@ type State = {
   setSrcs: (srcs: SrcObj[]) => void;
   setVolumeRenderMode: (volumeRenderMode: VolumeRenderMode) => void;
   setVolumeIsovalue: (volumeIsovalue: number) => void;
+  setVolumeDataMin: (volumeDataMin: number) => void;
+  setVolumeDataMax: (volumeDataMax: number) => void;
   setVolumeSliceXEnabled: (volumeSliceXEnabled: boolean) => void;
   setVolumeSliceYEnabled: (volumeSliceYEnabled: boolean) => void;
   setVolumeSliceZEnabled: (volumeSliceZEnabled: boolean) => void;
@@ -106,6 +112,8 @@ const useStore = create<State>((set) => ({
   srcs: [],
   volumeRenderMode: 'slices',
   volumeIsovalue: 50,
+  volumeDataMin: 0,
+  volumeDataMax: 255,
   volumeSliceXEnabled: true,
   volumeSliceYEnabled: true,
   volumeSliceZEnabled: true,
@@ -257,6 +265,16 @@ const useStore = create<State>((set) => ({
   setVolumeIsovalue: (volumeIsovalue: number) =>
     set({
       volumeIsovalue,
+    }),
+
+  setVolumeDataMin: (volumeDataMin: number) =>
+    set({
+      volumeDataMin,
+    }),
+
+  setVolumeDataMax: (volumeDataMax: number) =>
+    set({
+      volumeDataMax,
     }),
 
   setVolumeSliceXEnabled: (volumeSliceXEnabled: boolean) =>

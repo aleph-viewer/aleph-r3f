@@ -22,8 +22,9 @@ const fragmentShader = `
   out vec4 fragColor;
 
   void main() {
-    // texture() returns normalized [0,1]; windowCenter/windowWidth are raw 0-255 DICOM units.
-    float intensity = texture(map, vTexCoord).r * 255.0;
+    // texture() on this float/half-float sampler returns the literal stored value, already in
+    // real (rescaled) DICOM pixel-value units — no byte-range normalization to undo.
+    float intensity = texture(map, vTexCoord).r;
     float low = windowCenter - windowWidth * 0.5;
     float windowed = clamp((intensity - low) / max(windowWidth, 0.0001), 0.0, 1.0);
     fragColor = vec4(vec3(windowed), 1.0);

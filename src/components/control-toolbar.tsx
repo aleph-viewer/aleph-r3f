@@ -34,6 +34,7 @@ function SliderRow({
   label,
   description,
   value,
+  min = 0,
   max,
   onChange,
   onDragStart,
@@ -42,6 +43,7 @@ function SliderRow({
   label: string;
   description: string;
   value: number;
+  min?: number;
   max: number;
   onChange: (value: number) => void;
   onDragStart: () => void;
@@ -55,7 +57,7 @@ function SliderRow({
       </div>
       <div className="text-xs text-gray-400">{description}</div>
       <Slider
-        min={0}
+        min={min}
         max={max}
         step={1}
         value={[value]}
@@ -106,6 +108,8 @@ export function ControlToolbar() {
     setVolumeRenderMode,
     volumeIsovalue,
     setVolumeIsovalue,
+    volumeDataMin,
+    volumeDataMax,
     volumeSliceXEnabled,
     volumeSliceYEnabled,
     volumeSliceZEnabled,
@@ -217,8 +221,8 @@ export function ControlToolbar() {
                       <Slider
                         orientation="vertical"
                         style={{ height: 100 }}
-                        min={0}
-                        max={255}
+                        min={volumeDataMin}
+                        max={volumeDataMax}
                         step={1}
                         value={[volumeIsovalue]}
                         onPointerDown={() => {
@@ -258,7 +262,8 @@ export function ControlToolbar() {
                         label="Window Center"
                         description="Midpoint of the visible contrast range."
                         value={volumeWindowCenter}
-                        max={255}
+                        min={volumeDataMin}
+                        max={volumeDataMax}
                         onChange={setVolumeWindowCenter}
                         onDragStart={() => {
                           triggerCameraControlsEnabled(false);
@@ -273,7 +278,7 @@ export function ControlToolbar() {
                         label="Window Width"
                         description="Span of the visible contrast range."
                         value={volumeWindowWidth}
-                        max={510}
+                        max={Math.max(volumeDataMax - volumeDataMin, 1)}
                         onChange={setVolumeWindowWidth}
                         onDragStart={() => {
                           triggerCameraControlsEnabled(false);

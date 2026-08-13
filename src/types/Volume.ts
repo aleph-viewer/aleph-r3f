@@ -5,8 +5,13 @@ export type VolumeData = {
   dimensions: [number, number, number];
   // [x, y, z] in mm
   spacing: [number, number, number];
-  // flattened, row-major, x fastest then y then z; length = dimensions[0]*dimensions[1]*dimensions[2]
-  data: Uint8Array;
+  // Half-float bit patterns of rescaled real-world values (not raw sample values), flattened,
+  // row-major, x fastest then y then z; length = dimensions[0]*dimensions[1]*dimensions[2].
+  data: Uint16Array;
+  // min/max in the same rescaled real-world units as `data`.
   min: number;
   max: number;
+  // DICOM-suggested display window, in the same rescaled units, when the source file provides one.
+  windowCenter: number | null;
+  windowWidth: number | null;
 };
