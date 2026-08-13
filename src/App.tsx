@@ -194,7 +194,6 @@ function App() {
           }}
         />
       </div>
-      <Toaster />
     </div>
   );
 }
