@@ -17,7 +17,7 @@ const PopoverContent = React.forwardRef<
   React.ElementRef<typeof PopoverPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content> & { portalContainer?: HTMLElement }
 >(({ className, children, portalContainer, ...props }, ref) => (
-  <PopoverPrimitive.Portal container={portalContainer || document.body}>
+  <PopoverPrimitive.Portal container={portalContainer || document.getElementById('viewer') || document.body}>
     <PopoverPrimitive.Content
       ref={ref}
       className={cn('text-white font-medium text-sm bg-[#1f1f26] rounded-[0.5rem]', className)}
