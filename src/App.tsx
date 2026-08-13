@@ -2,7 +2,6 @@ import './App.css';
 import { useEffect, useRef } from 'react';
 // import { Leva, useControls } from 'leva';
 import { ViewerRef, SrcObj, Viewer, ControlPanel } from '../index';
-import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 // @ts-ignore
 import DOMPurify from 'dompurify';

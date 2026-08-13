@@ -15,6 +15,7 @@ import {
   useProgress,
 } from '@react-three/drei';
 import { BoxHelper, Group, Object3D, Vector3, Matrix4, Sphere, OrthographicCamera as ThreeOrthographicCamera } from 'three';
+import { toast } from 'sonner';
 import useStore from '@/Store';
 import {
   ViewerProps as ViewerProps,
@@ -34,6 +35,7 @@ import {
   SrcObj,
   JSON_EMIT_REQUEST,
   JSON_EMIT,
+  VOLUME_LOADING_ERROR,
   VOLUME_LOADING_PROGRESS,
 } from '@/types';
 import { useEventListener, useEventTrigger } from '@/lib/hooks/use-event';
@@ -46,8 +48,9 @@ import { getBoundingSphere, normalizeSrc, parseAnnotations, stringifyJson } from
 import { ControlToolbar } from './control-toolbar';
 import { AnnotationToolbar } from './annotation-toolbar';
 import { BoundsText } from './bounds-text';
+import { Toaster } from './ui/sonner';
 
-function Scene({ backgroundColor, environmentMap, initialCameraConfig, measurementUnits, onLoad, src, srcCollections, rotationPreset }: ViewerProps) {
+function Scene({ backgroundColor, environmentMap, initialCameraConfig, measurementUnits, onLoad, onError, src, srcCollections, rotationPreset }: ViewerProps) {
   const boundsRef = useRef<Group | null>(null);
   const boundsLineRef = useRef<Group | null>(null);
   const boundsSphereRef = useRef<Sphere | null>(null);
@@ -426,7 +429,10 @@ function Scene({ backgroundColor, environmentMap, initialCameraConfig, measureme
       <CameraControls ref={cameraRefs.controls} onChange={onCameraChange} makeDefault />
       <ambientLight intensity={ambientLightIntensity} />
 
-      <Suspense fallback={<Loader onLoad={onLoad} srcs={srcs} setLoading={setLoading} assetsLoadedRef={assetsLoadedRef} />}>
+      <Suspense
+        fallback={
+          <Loader onLoad={onLoad} onError={onError} srcs={srcs} setLoading={setLoading} loading={loading} assetsLoadedRef={assetsLoadedRef} />
+        }>
         <PivotControls
           ref={rotationControlsRef}
           autoTransform={false}
@@ -461,7 +467,14 @@ function Scene({ backgroundColor, environmentMap, initialCameraConfig, measureme
           </Bounds>
         </PivotControls>
       </Suspense>
-      <VolumeLoadWatcher onLoad={onLoad} srcs={srcs} setLoading={setLoading} loading={loading} assetsLoadedRef={assetsLoadedRef} />
+      <VolumeLoadWatcher
+        onLoad={onLoad}
+        onError={onError}
+        srcs={srcs}
+        setLoading={setLoading}
+        loading={loading}
+        assetsLoadedRef={assetsLoadedRef}
+      />
       <Environment preset={environmentMap} />
       {Tools[mode]}
       { (gridEnabled && mode == 'scene') && <gridHelper args={getGridProperties()} />}
@@ -569,33 +582,56 @@ function ProgressBar({ percent }: { percent: number }) {
   );
 }
 
+// Fixed id so repeated errors (or Loader/VolumeLoadWatcher both reacting to the same error) update
+// one toast in place via sonner's id-based dedup, rather than stacking duplicates.
+const VOLUME_ERROR_TOAST_ID = 'volume-loading-error';
+
 // Window CustomEvent, not the store, so updates only re-render the caller. Resets synchronously
 // during render (a useEffect would leave the stale value for one commit) when srcs changes.
-function useVolumeLoadingProgress(srcs: SrcObj[]): number {
+function useVolumeLoadingProgress(srcs: SrcObj[]): { progress: number; error: string | null } {
   const hasVolumeSrc = srcs.some((s) => s.type === 'volume');
   const resetValue = hasVolumeSrc ? 0 : 1;
   const [volumeProgress, setVolumeProgress] = useState(resetValue);
+  const [volumeError, setVolumeError] = useState<string | null>(null);
   const prevSrcsRef = useRef(srcs);
 
   if (prevSrcsRef.current !== srcs) {
     prevSrcsRef.current = srcs;
     if (volumeProgress !== resetValue) setVolumeProgress(resetValue);
+    if (volumeError !== null) {
+      setVolumeError(null);
+      toast.dismiss(VOLUME_ERROR_TOAST_ID);
+    }
   }
 
   useEventListener(VOLUME_LOADING_PROGRESS, (e: any) => setVolumeProgress(e.detail));
-  return volumeProgress;
+  useEventListener(VOLUME_LOADING_ERROR, (e: any) => setVolumeError(e.detail));
+  return { progress: volumeProgress, error: volumeError };
 }
 
 type LoadingProps = {
   onLoad?: (srcs: SrcObj[]) => void;
+  onError?: (message: string) => void;
   srcs: SrcObj[];
   setLoading: (loading: boolean) => void;
   assetsLoadedRef: React.MutableRefObject<boolean>;
 };
 
-function Loader({ onLoad, srcs, setLoading, assetsLoadedRef }: LoadingProps) {
+function Loader({ onLoad, onError, srcs, setLoading, assetsLoadedRef, loading }: LoadingProps & { loading: boolean }) {
   const { progress } = useProgress();
-  const volumeLoadingProgress = useVolumeLoadingProgress(srcs);
+  const { progress: volumeLoadingProgress, error: volumeLoadingError } = useVolumeLoadingProgress(srcs);
+
+  useEffect(() => {
+    if (!loading || !volumeLoadingError) return;
+    toast.error(volumeLoadingError, { id: VOLUME_ERROR_TOAST_ID, duration: Infinity, closeButton: true });
+    onError?.(volumeLoadingError);
+    setLoading(false);
+  }, [loading, volumeLoadingError, onError, setLoading]);
+
+  if (volumeLoadingError) {
+    return null;
+  }
+
   if (progress === 100) {
     assetsLoadedRef.current = true;
     if (volumeLoadingProgress === 1) {
@@ -614,8 +650,8 @@ function Loader({ onLoad, srcs, setLoading, assetsLoadedRef }: LoadingProps) {
 // Handoff for when Loader unmounts (GLTF/texture done) before a slower volume decode finishes —
 // assetsLoadedRef records that. Doesn't call useProgress() itself: triggers a cross-component
 // update-during-render warning from a permanently-mounted component.
-function VolumeLoadWatcher({ onLoad, srcs, setLoading, loading, assetsLoadedRef }: LoadingProps & { loading: boolean }) {
-  const volumeLoadingProgress = useVolumeLoadingProgress(srcs);
+function VolumeLoadWatcher({ onLoad, onError, srcs, setLoading, loading, assetsLoadedRef }: LoadingProps & { loading: boolean }) {
+  const { progress: volumeLoadingProgress, error: volumeLoadingError } = useVolumeLoadingProgress(srcs);
   const hasVolumeSrc = srcs.some((s) => s.type === 'volume');
   // Nothing else to wait for if every src is a volume — Loader never mounts in that case, so
   // assetsLoadedRef never gets set.
@@ -623,6 +659,12 @@ function VolumeLoadWatcher({ onLoad, srcs, setLoading, loading, assetsLoadedRef 
 
   useEffect(() => {
     if (!loading || !hasVolumeSrc) return;
+    if (volumeLoadingError) {
+      toast.error(volumeLoadingError, { id: VOLUME_ERROR_TOAST_ID, duration: Infinity, closeButton: true });
+      onError?.(volumeLoadingError);
+      setLoading(false);
+      return;
+    }
     if ((assetsLoadedRef.current || noOtherAssetsToLoad) && volumeLoadingProgress === 1) {
       setTimeout(() => {
         if (onLoad) {
@@ -631,9 +673,9 @@ function VolumeLoadWatcher({ onLoad, srcs, setLoading, loading, assetsLoadedRef 
         }
       }, 1);
     }
-  }, [volumeLoadingProgress, hasVolumeSrc, noOtherAssetsToLoad, loading, srcs, onLoad, setLoading, assetsLoadedRef]);
+  }, [volumeLoadingProgress, volumeLoadingError, hasVolumeSrc, noOtherAssetsToLoad, loading, srcs, onLoad, onError, setLoading, assetsLoadedRef]);
 
-  if (!hasVolumeSrc || volumeLoadingProgress === 1) return null;
+  if (!hasVolumeSrc || volumeLoadingError || volumeLoadingProgress === 1) return null;
 
   return <ProgressBar percent={volumeLoadingProgress * 100} />;
 }
@@ -682,6 +724,7 @@ const Viewer = (props: ViewerProps, ref: ((instance: unknown) => void) | RefObje
       </Canvas>
       <AnnotationToolbar />
       <ControlToolbar />
+      <Toaster />
     </div>
   );
 };

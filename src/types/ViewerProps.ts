@@ -7,6 +7,7 @@ type BaseViewerProps = {
   initialCameraConfig?: InitialCameraConfig;
   measurementUnits?: 'm' | 'mm';
   onLoad?: (src: SrcObj[]) => void;
+  onError?: (message: string) => void;
   rotationPreset?: [number, number, number];
 };
 

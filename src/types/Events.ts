@@ -11,6 +11,7 @@ export const DROPPED_VOLUME_HANDLE = 'aldroppedvolumehandle';
 export const JSON_EMIT = 'aljsonemit';
 export const JSON_EMIT_REQUEST = 'aljsonemitrequest';
 export const RECENTER = 'alrecenter';
+export const VOLUME_LOADING_ERROR = 'alvolumeloadingerror';
 export const VOLUME_LOADING_PROGRESS = 'alvolumeloadingprogress';
 
 export type Event =
@@ -27,4 +28,5 @@ export type Event =
   | typeof JSON_EMIT
   | typeof JSON_EMIT_REQUEST
   | typeof RECENTER
+  | typeof VOLUME_LOADING_ERROR
   | typeof VOLUME_LOADING_PROGRESS;
