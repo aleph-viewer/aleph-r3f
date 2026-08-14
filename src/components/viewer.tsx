@@ -553,7 +553,7 @@ function Bounds({
           setSelectedAnnotation(null);
         }
       }}>
-      {lineVisible ? <group ref={boundsLineRef}>{children}</group> : children}
+      <group ref={boundsLineRef}>{children}</group>
       { lineVisible && <BoundsText boundsRef={boundsRef} rotationMatrixRef={rotationMatrixRef} /> }
     </group>
   );

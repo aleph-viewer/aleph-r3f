@@ -33,8 +33,6 @@ function decodeVolume(url: string, onProgress: (progress: number) => void): Prom
             data: new Uint16Array(data),
             min,
             max,
-            windowCenter: metadata.windowCenter,
-            windowWidth: metadata.windowWidth,
           };
           volumeCache.set(url, volume);
           worker.terminate();

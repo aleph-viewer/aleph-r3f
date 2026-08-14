@@ -30,9 +30,6 @@ export type DicomVolumeMetadata = {
   spacingBetweenSlices: number;
   rescaleSlope: number;
   rescaleIntercept: number;
-  // DICOM-suggested display window (0028,1050 / 0028,1051), first value only if multi-valued.
-  windowCenter: number | null;
-  windowWidth: number | null;
 };
 
 export type ParsedDicom = {
@@ -43,12 +40,6 @@ export type ParsedDicom = {
 
 export function isJpegLosslessTransferSyntax(transferSyntaxUID: string): boolean {
   return JPEG_LOSSLESS_TRANSFER_SYNTAXES.includes(transferSyntaxUID);
-}
-
-function firstMultiValue(value: string | undefined): number | null {
-  if (value === undefined) return null;
-  const first = parseFloat(value.split('\\')[0]);
-  return Number.isNaN(first) ? null : first;
 }
 
 export function parseDicomVolume(byteArray: Uint8Array): ParsedDicom {
@@ -68,8 +59,6 @@ export function parseDicomVolume(byteArray: Uint8Array): ParsedDicom {
     dataSet.floatString('x00180088') ?? dataSet.floatString('x00180050') ?? 1;
   const rescaleSlope = dataSet.floatString('x00281053') ?? 1;
   const rescaleIntercept = dataSet.floatString('x00281052') ?? 0;
-  const windowCenter = firstMultiValue(dataSet.string('x00281050'));
-  const windowWidth = firstMultiValue(dataSet.string('x00281051'));
 
   if (rows === undefined || columns === undefined || bitsAllocated === undefined) {
     throw new Error('DICOM file is missing required pixel geometry tags (Rows/Columns/BitsAllocated).');
@@ -125,8 +114,6 @@ export function parseDicomVolume(byteArray: Uint8Array): ParsedDicom {
       spacingBetweenSlices,
       rescaleSlope,
       rescaleIntercept,
-      windowCenter,
-      windowWidth,
     },
   };
 }

@@ -11,7 +11,4 @@ export type VolumeData = {
   // min/max in the same rescaled real-world units as `data`.
   min: number;
   max: number;
-  // DICOM-suggested display window, in the same rescaled units, when the source file provides one.
-  windowCenter: number | null;
-  windowWidth: number | null;
 };

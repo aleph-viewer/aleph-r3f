@@ -39,14 +39,14 @@ export const Volume = ({ url, position = [0, 0, 0], rotation = [0, 0, 0], scale 
     triggerVolumeLoadingError(error.message);
   }, [error, triggerVolumeLoadingError]);
 
-  // Seeds window/level, isovalue, and slider range defaults from the volume's real data range
+  // Seeds window/level, isovalue, and slider range defaults from the volume's actual data range
   const seededVolumeRef = useRef<VolumeData | null>(null);
   useEffect(() => {
     if (!volume || seededVolumeRef.current === volume) return;
     seededVolumeRef.current = volume;
 
-    const center = volume.windowCenter ?? (volume.min + volume.max) / 2;
-    const width = volume.windowWidth ?? Math.max(volume.max - volume.min, 1);
+    const center = (volume.min + volume.max) / 2;
+    const width = Math.max(volume.max - volume.min, 1);
 
     setVolumeDataMin(volume.min);
     setVolumeDataMax(volume.max);
